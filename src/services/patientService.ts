@@ -39,7 +39,7 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
     await esClient.index({
         index: INDICES.patients,
         id: patient.id,
-        document: patient,
+        body: patient,
         refresh: "wait_for"
     })
 
@@ -71,15 +71,17 @@ export function calculateAlertLevel(patient: Patient, now: Date = new Date()): A
 // scopeToProfessionalId: quando informado, só retorna pacientes cujo ACS
 // responsável é esse profissional (usado pra quem não é admin)
 export async function listPatients(scopeToProfessionalId?: string): Promise<PatientWithAlert[]> {
-    const result = await esClient.search<Patient>({
+    const result = await esClient.search({
         index: INDICES.patients,
-        query: { match_all: {} },
-        size: 200
+        body: {
+            query: { match_all: {} },
+            size: 200
+        }
     });
 
     const now = new Date();
 
-    const patients = result.hits.hits.map((hit) => {
+    const patients = result.body.hits.hits.map((hit: any) => {
         const patient = hit._source as Patient;
         return { ...patient, alertLevel: calculateAlertLevel(patient, now) };
     });
@@ -93,14 +95,15 @@ export async function listPatients(scopeToProfessionalId?: string): Promise<Pati
 
 export async function getPatient(id: string): Promise<PatientWithAlert | null> {
     try {
-        const result = await esClient.get<Patient>({
+        const result = await esClient.get({
             index: INDICES.patients,
             id: id
         })
 
-        if (!result._source) return null;
+        const source = result.body._source as Patient | undefined;
+        if (!source) return null;
 
-        return { ...result._source, alertLevel: calculateAlertLevel(result._source) };
+        return { ...source, alertLevel: calculateAlertLevel(source) };
 
     } catch (error: any) {
         if (error.meta?.statusCode === 404) return null;
@@ -117,7 +120,7 @@ export async function updatePatient(
         await esClient.update({
             index: INDICES.patients,
             id,
-            doc: updates,
+            body: { doc: updates },
             refresh: "wait_for",
         });
     } catch (error: any) {
@@ -137,10 +140,12 @@ export async function updatePatientAfterVisit(patientId: string, visitDate: stri
     await esClient.update({
         index: INDICES.patients,
         id: patientId,
-        doc: {
-            // only these fields get merged into the existing patient; everything else stays untouched
-            lastVisitAt: visitDate,
-            nextVisitDue: nextVisitDue
+        body: {
+            doc: {
+                // only these fields get merged into the existing patient; everything else stays untouched
+                lastVisitAt: visitDate,
+                nextVisitDue: nextVisitDue
+            }
         },
         refresh: "wait_for"
     })

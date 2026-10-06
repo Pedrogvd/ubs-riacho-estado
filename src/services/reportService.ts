@@ -11,23 +11,27 @@ import {
 } from "../types";
 
 async function listAllPatients(): Promise<Patient[]> {
-    const result = await esClient.search<Patient>({
+    const result = await esClient.search({
         index: INDICES.patients,
-        query: { match_all: {} },
-        size: 200,
+        body: {
+            query: { match_all: {} },
+            size: 200,
+        }
     });
 
-    return result.hits.hits.map((hit) => hit._source as Patient);
+    return result.body.hits.hits.map((hit: any) => hit._source as Patient);
 }
 
 async function listAllHealthProfessionals(): Promise<HealthProfessional[]> {
-    const result = await esClient.search<HealthProfessional>({
+    const result = await esClient.search({
         index: INDICES.healthProfessionals,
-        query: { match_all: {} },
-        size: 200,
+        body: {
+            query: { match_all: {} },
+            size: 200,
+        }
     });
 
-    return result.hits.hits.map((hit) => hit._source as HealthProfessional);
+    return result.body.hits.hits.map((hit: any) => hit._source as HealthProfessional);
 }
 
 // "YYYY-MM-DDTHH:mm..." sempre começa com "YYYY-MM", então comparar os 7

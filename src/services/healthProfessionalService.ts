@@ -39,7 +39,7 @@ export async function createHealthProfessional(input: CreateHealthProfessionalIn
     await esClient.index({
         index: INDICES.healthProfessionals,
         id: healthProfessional.id,
-        document: healthProfessional,
+        body: healthProfessional,
         refresh: "wait_for"
     })
 
@@ -49,20 +49,22 @@ export async function createHealthProfessional(input: CreateHealthProfessionalIn
 // the user will type the email at login and with this we will get the ID
 export async function getHealthProfessionalByEmail(email: string): Promise<HealthProfessional | null> {
 
-    const result = await esClient.search<HealthProfessional>({
+    const result = await esClient.search({
         index: INDICES.healthProfessionals,
-        query: {
-            term: { email }
+        body: {
+            query: {
+                term: { email }
+            }
         }
     })
 
-    const hit = result.hits.hits[0];
+    const hit = result.body.hits.hits[0];
 
     if (!hit || !hit._source) {
         return null;
     }
 
-    return hit._source;
+    return hit._source as HealthProfessional;
 }
 
 
@@ -98,25 +100,28 @@ export async function loginHealthProfessional(email: string, password: string): 
 }
 
 export async function listHealthProfessionals(): Promise<Omit<HealthProfessional, "passwordHash">[]> {
-    const result = await esClient.search<HealthProfessional>({
+    const result = await esClient.search({
         index: INDICES.healthProfessionals,
-        query: { match_all: {} },
-        size: 200
+        body: {
+            query: { match_all: {} },
+            size: 200
+        }
     });
 
-    return result.hits.hits.map((hit) => toSafeProfessional(hit._source as HealthProfessional));
+    return result.body.hits.hits.map((hit: any) => toSafeProfessional(hit._source as HealthProfessional));
 }
 
 export async function getHealthProfessionalById(id: string): Promise<Omit<HealthProfessional, "passwordHash"> | null> {
     try {
-        const result = await esClient.get<HealthProfessional>({
+        const result = await esClient.get({
             index: INDICES.healthProfessionals,
             id,
         });
 
-        if (!result._source) return null;
+        const source = result.body._source as HealthProfessional | undefined;
+        if (!source) return null;
 
-        return toSafeProfessional(result._source);
+        return toSafeProfessional(source);
     } catch (error: any) {
         if (error.meta?.statusCode === 404) return null;
         throw error;
@@ -139,7 +144,7 @@ export async function updateHealthProfessional(
         await esClient.update({
             index: INDICES.healthProfessionals,
             id,
-            doc: updates,
+            body: { doc: updates },
             refresh: "wait_for",
         });
     } catch (error: any) {
@@ -147,12 +152,13 @@ export async function updateHealthProfessional(
         throw error;
     }
 
-    const result = await esClient.get<HealthProfessional>({
+    const result = await esClient.get({
         index: INDICES.healthProfessionals,
         id,
     });
 
-    if (!result._source) return null;
+    const source = result.body._source as HealthProfessional | undefined;
+    if (!source) return null;
 
-    return toSafeProfessional(result._source);
+    return toSafeProfessional(source);
 }

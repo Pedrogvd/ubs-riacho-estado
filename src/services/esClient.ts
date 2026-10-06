@@ -1,7 +1,15 @@
-import { Client } from "@elastic/elasticsearch";
+import { Client } from "@opensearch-project/opensearch";
+
+const ES_URL = process.env.ES_URL;
+
+if (!ES_URL) {
+    throw new Error(
+        "ES_URL não está definido. Adicione no .env a URL de conexão do Elasticsearch/OpenSearch."
+    );
+}
 
 export const esClient = new Client({
-    node: "http://localhost:9200"
+    node: ES_URL
 })
 
 export const INDICES = {
@@ -27,8 +35,8 @@ export const INDICES = {
 
 async function ensureIndex(index: string, mappings: Record<string, unknown>) {// "Record means some generic object with text keys, but I won't specify exactly which fields it has."
     const exists = await esClient.indices.exists({ index });
-    if (!exists) {
-        await esClient.indices.create({ index, mappings })
+    if (!exists.body) {
+        await esClient.indices.create({ index, body: { mappings } })
         console.log(`Index "${index}" created`);
     }
 }

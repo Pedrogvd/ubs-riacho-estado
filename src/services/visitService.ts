@@ -23,7 +23,7 @@ export async function createVisit (input: CreateVisitInput, professionalId: stri
     await esClient.index({ // .index = create row
         index: INDICES.visits,
         id: visit.id,
-        document: visit,
+        body: visit,
         refresh: "wait_for"
     })
 
@@ -39,13 +39,15 @@ export async function createVisit (input: CreateVisitInput, professionalId: stri
 // scopeToProfessionalId: quando informado, só retorna visitas de pacientes
 // cujo ACS responsável é esse profissional (usado pra quem não é admin)
 export async function listVisits(scopeToProfessionalId?: string): Promise<Visit[]> {
-    const result = await esClient.search<Visit>({
+    const result = await esClient.search({
         index: INDICES.visits,
-        query: { match_all: {} },
-        size: 500,
+        body: {
+            query: { match_all: {} },
+            size: 500,
+        }
     });
 
-    const visits = result.hits.hits.map((hit) => hit._source as Visit);
+    const visits = result.body.hits.hits.map((hit: any) => hit._source as Visit);
 
     if (!scopeToProfessionalId) {
         return visits;
