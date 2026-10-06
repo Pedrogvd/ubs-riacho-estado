@@ -1,0 +1,222 @@
+.settings-page {
+  width: 100%;
+  max-width: 62.5rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+h1 {
+  font-size: 1.75rem;
+  color: #1a2b3c;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 0.0625rem solid #e2e8f0;
+}
+
+.tabs button {
+  padding: 0.65rem 1.1rem;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 0.1875rem solid transparent;
+  margin-bottom: -0.0625rem;
+}
+
+.tabs button:hover {
+  color: #1a2b3c;
+}
+
+.tabs button.active {
+  color: #0f9d8f;
+  border-bottom-color: #0f9d8f;
+}
+
+.btn-new {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: #0f9d8f;
+  color: white;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn-new:hover {
+  background: #0c8074;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.filter-input {
+  flex: 1 1 16rem;
+  padding: 0.55rem 0.75rem;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background: #f8fafc;
+  color: #1a2b3c;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.filter-input::placeholder {
+  color: #94a3b8;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #0f9d8f;
+  background: #ffffff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+thead {
+  background: #1a2b3c;
+}
+
+th {
+  text-align: left;
+  padding: 0.9rem 1.25rem;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+td {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 0.0625rem solid #e2e8f0;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 62.4375rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge--admin {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.badge--professional {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.badge--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge--inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge--high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge--medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge--low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.actions button {
+  padding: 0.4rem 0.8rem;
+  border: 0.0625rem solid #cbd5e1;
+  background: white;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.actions button:hover {
+  background: #f1f5f9;
+}
+
+.btn-danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.btn-danger:hover {
+  background: #fef2f2;
+}
+
+.btn-link {
+  color: #0f9d8f;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.self-note {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-style: italic;
+}
