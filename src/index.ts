@@ -14,7 +14,12 @@ import { requireAuth } from "./middleware/requireAuth";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+const ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "https://ubs-riacho-estado.pages.dev",
+];
+
+app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 
 /* 
