@@ -80,10 +80,11 @@ Lista de melhorias e pendências identificadas durante o desenvolvimento, pra tr
 - [x] **Banco (Bonsai)**: cluster gratuito "Test Cluster" criado; primeiro usuário admin promovido via Console do Bonsai.
 - [x] **Bug do limite de requisições concorrentes do Bonsai**: dashboard e relatório mensal disparavam buscas em paralelo (`Promise.all`) e estouravam o limite do plano gratuito (erro 500 "Concurrent request limit exceeded"); corrigido rodando as buscas em sequência.
 - [x] **Frontend preparado**: `environment.ts`/`environment.production.ts` + `fileReplacements` no `angular.json`; os 6 serviços Angular passaram a usar `environment.apiUrl` em vez de `localhost:3000` fixo.
-- [ ] **CORS do backend**: restringir `app.use(cors())` pro domínio do Cloudflare Pages (hoje está liberado pra qualquer origem).
-- [ ] **`_redirects` pro Cloudflare Pages**: criar `ubs-frontend/public/_redirects` com `/* /index.html 200` pra rotas do Angular funcionarem no refresh.
-- [ ] **Cloudflare Pages**: criar conta/site, conectar o repositório, apontar build pra `dist/ubs-frontend/browser`, publicar.
-- [ ] **Teste fim a fim em produção**: frontend publicado (Cloudflare Pages) conversando com o backend publicado (Render).
+- [x] **CORS do backend**: restrito a `localhost:4200` (dev) e `https://ubs-riacho-estado.pages.dev` (produção).
+- [x] **`_redirects` pro Cloudflare Pages**: criado em `ubs-frontend/public/_redirects` (`/* /index.html 200`) pra rotas do Angular funcionarem no refresh.
+- [x] **SSR removido do build de produção**: `angular.json` estava configurado pra gerar build com servidor (SSR), o que não gerava um `index.html` normal — causava 404 no Cloudflare Pages. Removidas as opções `server`/`outputMode`/`ssr`, voltando pra build puramente estático (SPA).
+- [x] **Cloudflare Pages**: conta criada, projeto conectado ao GitHub (`Pedrogvd/ubs-riacho-estado`), root directory `ubs-frontend`, build output `dist/ubs-frontend/browser`, publicado em `https://ubs-riacho-estado.pages.dev`.
+- [x] **Teste fim a fim em produção**: login e dashboard confirmados funcionando com o frontend publicado (Cloudflare Pages) conversando com o backend publicado (Render).
 
 ## Ideias futuras (melhorias, sem prioridade definida)
 
