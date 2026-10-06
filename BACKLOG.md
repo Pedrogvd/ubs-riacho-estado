@@ -74,9 +74,16 @@ Lista de melhorias e pendências identificadas durante o desenvolvimento, pra tr
 - [x] **Segurança antes de subir**: `JWT_SECRET` tirado do código (estava fixo) e movido pro `.env` (fora do Git, via `.gitignore`), com `.env.example` documentando a variável. Servidor agora falha alto se a variável não existir, em vez de usar uma chave fraca escondida.
 - [x] **Backend passou de `ts-node` pra `tsx`**: o `ts-node` não é compatível com o TypeScript 7 (compilador nativo novo); `npm run dev` agora usa `tsx watch`, com reinício automático ao salvar.
 
-## Próximos passos (não iniciados)
+## Deploy
 
-- [ ] **Deploy**.
+- [x] **Backend no Render**: migrado de Elasticsearch pra OpenSearch (`@opensearch-project/opensearch`, compatível com o Bonsai), porta dinâmica (`process.env.PORT`), variáveis de ambiente (`JWT_SECRET`, `ES_URL`) configuradas no painel do Render. Publicado e funcionando em `https://ubs-riacho-estado.onrender.com` (plano gratuito, idle após inatividade).
+- [x] **Banco (Bonsai)**: cluster gratuito "Test Cluster" criado; primeiro usuário admin promovido via Console do Bonsai.
+- [x] **Bug do limite de requisições concorrentes do Bonsai**: dashboard e relatório mensal disparavam buscas em paralelo (`Promise.all`) e estouravam o limite do plano gratuito (erro 500 "Concurrent request limit exceeded"); corrigido rodando as buscas em sequência.
+- [x] **Frontend preparado**: `environment.ts`/`environment.production.ts` + `fileReplacements` no `angular.json`; os 6 serviços Angular passaram a usar `environment.apiUrl` em vez de `localhost:3000` fixo.
+- [ ] **CORS do backend**: restringir `app.use(cors())` pro domínio do Cloudflare Pages (hoje está liberado pra qualquer origem).
+- [ ] **`_redirects` pro Cloudflare Pages**: criar `ubs-frontend/public/_redirects` com `/* /index.html 200` pra rotas do Angular funcionarem no refresh.
+- [ ] **Cloudflare Pages**: criar conta/site, conectar o repositório, apontar build pra `dist/ubs-frontend/browser`, publicar.
+- [ ] **Teste fim a fim em produção**: frontend publicado (Cloudflare Pages) conversando com o backend publicado (Render).
 
 ## Ideias futuras (melhorias, sem prioridade definida)
 
