@@ -4,12 +4,13 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { authInterceptor } from './interceptors/auth-interceptor';
+import { loadingInterceptor } from './interceptors/loading-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])), // Angular (navegador) → Node/Express (localhost:3000) → Elasticsearch (localhost:9200)
+    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor])),
     provideClientHydration(withEventReplay())
   ]
 };
