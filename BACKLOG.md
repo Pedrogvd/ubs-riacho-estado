@@ -67,9 +67,15 @@ Lista de melhorias e pendências identificadas durante o desenvolvimento, pra tr
 - [x] **Agenda (calendário) redesenhada pro mobile**: vira lista vertical por dia (em vez da grade de 7 colunas), com abreviação do dia da semana; dias sem visita ficam escondidos pra lista não ficar longa demais.
 - [x] **Ajustes finos**: filtros, paginação e tela de login revisados pra telas pequenas.
 
+## Subir pro GitHub
+
+- [x] **Repositório criado e código publicado**: monorepo privado em `github.com/Pedrogvd/ubs-riacho-estado`, backend e frontend juntos.
+- [x] **README.md**: tecnologias, estrutura, funcionalidades, pré-requisitos e como rodar backend e frontend.
+- [x] **Segurança antes de subir**: `JWT_SECRET` tirado do código (estava fixo) e movido pro `.env` (fora do Git, via `.gitignore`), com `.env.example` documentando a variável. Servidor agora falha alto se a variável não existir, em vez de usar uma chave fraca escondida.
+- [x] **Backend passou de `ts-node` pra `tsx`**: o `ts-node` não é compatível com o TypeScript 7 (compilador nativo novo); `npm run dev` agora usa `tsx watch`, com reinício automático ao salvar.
+
 ## Próximos passos (não iniciados)
 
-- [ ] **Subir pro GitHub com README**.
 - [ ] **Deploy**.
 
 ## Ideias futuras (melhorias, sem prioridade definida)
