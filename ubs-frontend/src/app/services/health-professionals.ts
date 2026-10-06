@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface HealthProfessional {
   id: string;
@@ -37,7 +38,7 @@ export interface UpdateHealthProfessionalInput {
   providedIn: 'root',
 })
 export class HealthProfessionals {
-  private readonly apiUrl = 'http://localhost:3000/health-professionals';
+  private readonly apiUrl = `${environment.apiUrl}/health-professionals`;
   constructor(private http: HttpClient) { }
 
   list(): Observable<HealthProfessional[]> {

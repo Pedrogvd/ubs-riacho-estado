@@ -99,11 +99,11 @@ function buildConditionBreakdown(visits: Visit[], patients: Patient[]): Conditio
 // scopeToProfessionalId: quando informado, o relatório é só dos pacientes
 // desse profissional (usado pra quem não é admin)
 export async function getMonthlyReport(month: string, scopeToProfessionalId?: string): Promise<MonthlyReport> {
-    const [allVisits, patients, professionals] = await Promise.all([
-        listVisits(scopeToProfessionalId),
-        listAllPatients(),
-        listAllHealthProfessionals(),
-    ]);
+    // Mesma razão do dashboardService: o plano gratuito do Bonsai só aceita
+    // 1 requisição por vez, então essas três buscas rodam em sequência.
+    const allVisits = await listVisits(scopeToProfessionalId);
+    const patients = await listAllPatients();
+    const professionals = await listAllHealthProfessionals();
 
     const visitsInMonth = allVisits.filter((visit) => isInMonth(visit.visitDate, month));
 

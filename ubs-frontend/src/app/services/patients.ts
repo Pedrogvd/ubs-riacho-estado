@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Patient {
   id: string;
@@ -56,7 +57,7 @@ export interface UpdatePatientInput {
 })
 
 export class Patients {
-  private readonly apiUrl = 'http://localhost:3000/patients';
+  private readonly apiUrl = `${environment.apiUrl}/patients`;
   constructor(private http: HttpClient) { }
 
   list(): Observable<Patient[]> {

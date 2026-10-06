@@ -5,10 +5,11 @@ import { DashboardSummary } from "../types";
 // scopeToProfessionalId: quando informado, o resumo é só dos pacientes
 // desse profissional (usado pra quem não é admin)
 export async function getDashboardSummary(scopeToProfessionalId?: string): Promise<DashboardSummary> {
-    const [patients, visits] = await Promise.all([
-        listPatients(scopeToProfessionalId),
-        listVisits(scopeToProfessionalId),
-    ]);
+    // O plano gratuito do Bonsai só permite 1 requisição por vez pro
+    // Elasticsearch/OpenSearch, então essas duas buscas precisam rodar
+    // uma depois da outra (sequencial), em vez de em paralelo (Promise.all).
+    const patients = await listPatients(scopeToProfessionalId);
+    const visits = await listVisits(scopeToProfessionalId);
 
     const now = new Date();
 

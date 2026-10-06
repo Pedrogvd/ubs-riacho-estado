@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface VisitOutcomeBreakdown {
   completed: number;
@@ -31,7 +32,7 @@ export interface MonthlyReport {
 
 @Injectable({ providedIn: 'root' })
 export class Reports {
-  private readonly apiUrl = 'http://localhost:3000/reports';
+  private readonly apiUrl = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 

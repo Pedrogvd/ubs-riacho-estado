@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface LoginInput { email: string; password: string; }
 export interface LoginResponse { token: string; name: string; }
@@ -10,7 +11,7 @@ const NAME_KEY = 'ubs_name';
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
-  private readonly apiUrl = 'http://localhost:3000/auth';
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
   private expirationTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   isLoggedIn = signal<boolean>(!!localStorage.getItem(TOKEN_KEY));
