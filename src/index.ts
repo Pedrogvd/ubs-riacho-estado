@@ -22,6 +22,11 @@ const ALLOWED_ORIGINS = [
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 
+// Health check route, used by UptimeRobot to keep the free Render instance awake
+app.get("/", (req, res) => {
+    res.status(200).json({ status: "ok" });
+});
+
 /* 
 Notice: /auth (login) and /health-professionals (registration) are left
 without requireAuth — that makes sense, because to log in or register 
