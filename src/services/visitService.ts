@@ -43,6 +43,7 @@ export async function listVisits(scopeToProfessionalId?: string): Promise<Visit[
         index: INDICES.visits,
         body: {
             query: { match_all: {} },
+            sort: [{ visitDate: { order: "desc" } }],
             size: 500,
         }
     });

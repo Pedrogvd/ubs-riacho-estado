@@ -52,8 +52,21 @@ visitsRouter.post("/", async (req, res) => {
 visitsRouter.get("/", async (req, res) => {
     try {
         const isAdmin = req.user!.role === "admin";
+        const patientId = req.query.patientId;
+
+        // GET /visits?patientId=... filtra o histórico de um paciente específico
+        if (typeof patientId === "string") {
+            const patient = await getPatient(patientId);
+            if (!patient) return res.status(404).json({ error: "patient not found" });
+            if (!isAdmin && patient.acsResponsavelId !== req.user!.professionalId) {
+                return res.status(403).json({ error: "you don't have access to this patient" });
+            }
+        }
+
         const visits = await listVisits(isAdmin ? undefined : req.user!.professionalId);
-        res.json(visits);
+        const filtered = typeof patientId === "string" ? visits.filter((visit) => visit.patientId === patientId) : visits;
+
+        res.json(filtered);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

@@ -41,6 +41,10 @@ export class Visits {
     return this.http.get<Visit[]>(this.apiUrl);
   }
 
+  listByPatient(patientId: string): Observable<Visit[]> {
+    return this.http.get<Visit[]>(this.apiUrl, { params: { patientId } });
+  }
+
   create(input: CreateVisitInput): Observable<Visit> {
     return this.http.post<Visit>(this.apiUrl, input);
   }

@@ -15,7 +15,8 @@ export const esClient = new Client({
 export const INDICES = {
     patients: "patients",
     visits: "visits",
-    healthProfessionals: "health_professionals"
+    healthProfessionals: "health_professionals",
+    ivcfAssessments: "ivcf_assessments"
 }
 
 
@@ -71,6 +72,17 @@ export async function ensureIndices(): Promise<void> { // A Promise represents a
             cpf: { type: "keyword" },
             email: { type: "keyword" },
             passwordHash: { type: "keyword" },
+            createdAt: { type: "date" },
+        },
+    });
+
+    await ensureIndex(INDICES.ivcfAssessments, {
+        properties: {
+            patientId: { type: "keyword" },
+            professionalId: { type: "keyword" },
+            assessedAt: { type: "date" },
+            totalScore: { type: "integer" },
+            classification: { type: "keyword" },
             createdAt: { type: "date" },
         },
     });

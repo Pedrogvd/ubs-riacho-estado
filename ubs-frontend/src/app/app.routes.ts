@@ -8,6 +8,9 @@ import { VisitsCalendar } from './pages/visits-calendar/visits-calendar';
 import { Settings } from './pages/settings/settings';
 import { ProfessionalForm } from './pages/professional-form/professional-form';
 import { Login } from './pages/login/login';
+import { IvcfForm } from './pages/ivcf-form/ivcf-form';
+import { IvcfHistory } from './pages/ivcf-history/ivcf-history';
+import { VisitHistory } from './pages/visit-history/visit-history';
 import { authGuard } from './guards/auth-guard';
 import { adminGuard } from './guards/admin-guard';
 
@@ -23,4 +26,7 @@ export const routes: Routes = [
   { path: 'professionals/new', component: ProfessionalForm, canActivate: [authGuard, adminGuard] },
   { path: 'professionals/edit/:id', component: ProfessionalForm, canActivate: [authGuard, adminGuard] },
   { path: 'visits/new/:patientId', component: VisitForm, canActivate: [authGuard] },
+  { path: 'ivcf/new/:patientId', component: IvcfForm, canActivate: [authGuard] },
+  { path: 'ivcf/history/:patientId', component: IvcfHistory, canActivate: [authGuard] },
+  { path: 'visits/history/:patientId', component: VisitHistory, canActivate: [authGuard] },
 ];

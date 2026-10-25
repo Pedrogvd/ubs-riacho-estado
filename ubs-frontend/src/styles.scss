@@ -144,9 +144,31 @@ main.app-content > router-outlet + * {
     font-weight: 600;
   }
 
+  // "Editar dados do paciente" (e qualquer outro link solto fora do grid de
+  // ações clínicas) ocupa a linha inteira do cartão, sozinho.
+  td.actions > a.btn-link {
+    flex: 1 1 100%;
+  }
+
   td.actions .self-note {
     align-self: center;
     font-size: 0.8rem;
     color: #64748b;
+  }
+
+  // no desktop o grupo de ações clínicas (visita/IVCF) é um grid 2x2; no
+  // cartão do celular a gente mantém esse mesmo grid de 2 colunas (em vez de
+  // "soltar" os 4 botões um por linha) pra manter os pares visita+visita e
+  // IVCF+IVCF um do lado do outro, já que a cor de cada um já indica o grupo.
+  td.actions .action-grid {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  td.actions .action-grid .btn-link {
+    font-size: 0.78rem;
+    padding: 0.55rem 0.4rem;
   }
 }

@@ -6,3 +6,5 @@ export * from "./HealthProfessional";
 export * from "./DTOS/CreatePatientInput";
 export * from "./DTOS/CreateHealthProfessionalInput";
 export * from "./DTOS/CreateVisitInput";
+export * from "./IvcfAssessment";
+export * from "./DTOS/CreateIvcfAssessmentInput";
