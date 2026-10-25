@@ -22,6 +22,8 @@ export class Settings implements OnInit {
   patientsPage = signal(1);
   patientSearch = signal('');
   patientDeleteError = signal('');
+  patientToDelete = signal<Patient | null>(null);
+  deletingPatient = signal(false);
 
   filteredPatients = computed(() => {
     const search = this.patientSearch().trim().toLowerCase();
@@ -102,19 +104,37 @@ export class Settings implements OnInit {
   }
 
   // exclusão de paciente de teste (ou qualquer cadastro indevido): some
-  // junto o histórico de visitas e IVCF-20 dele, então confirma antes —
+  // junto o histórico de visitas e IVCF-20 dele, então pede confirmação num
+  // modal do próprio site (em vez do confirm() nativo do navegador) antes —
   // não tem como desfazer.
-  deletePatient(patient: Patient): void {
-    const confirmed = confirm(
-      `Excluir o paciente "${patient.name}"? Isso também apaga o histórico de visitas e de avaliações IVCF-20 dele. Essa ação não pode ser desfeita.`
-    );
-    if (!confirmed) return;
+  askDeletePatient(patient: Patient): void {
+    this.patientDeleteError.set('');
+    this.patientToDelete.set(patient);
+  }
 
+  cancelDeletePatient(): void {
+    if (this.deletingPatient()) return; // evita fechar no meio de um pedido em andamento
+    this.patientToDelete.set(null);
+    this.patientDeleteError.set('');
+  }
+
+  confirmDeletePatient(): void {
+    const patient = this.patientToDelete();
+    if (!patient) return;
+
+    this.deletingPatient.set(true);
     this.patientDeleteError.set('');
 
     this.patientsService.delete(patient.id).subscribe({
-      next: () => this.loadPatients(),
-      error: () => this.patientDeleteError.set('Não foi possível excluir o paciente. Tente novamente.'),
+      next: () => {
+        this.deletingPatient.set(false);
+        this.patientToDelete.set(null);
+        this.loadPatients();
+      },
+      error: () => {
+        this.deletingPatient.set(false);
+        this.patientDeleteError.set('Não foi possível excluir o paciente. Tente novamente.');
+      },
     });
   }
 
