@@ -143,7 +143,11 @@ export class IvcfForm implements OnInit {
 
     const input: CreateIvcfAssessmentInput = {
       patientId: this.patientId,
-      assessedAt: new Date(assessedAt).toISOString(),
+      // assessedAt vem do <input type="date"> como "AAAA-MM-DD" (só data, sem hora).
+      // new Date("AAAA-MM-DD") é interpretado como meia-noite UTC, o que no horário
+      // do Brasil (UTC-3) já "volta" pro dia anterior quando exibido depois. Adicionar
+      // T00:00:00 faz o JS tratar como meia-noite no fuso local, preservando o dia certo.
+      assessedAt: new Date(`${assessedAt}T00:00:00`).toISOString(),
       answers: answers as IvcfAnswers,
     };
 

@@ -151,6 +151,22 @@ export async function updatePatientAfterVisit(patientId: string, visitDate: stri
     })
 }
 
+// apaga o documento do paciente. NÃO apaga visitas/IVCF ligados a ele —
+// isso é responsabilidade de quem chama (ver a rota DELETE /patients/:id,
+// que apaga o histórico clínico primeiro pra não deixar registro órfão)
+export async function deletePatient(id: string): Promise<void> {
+    try {
+        await esClient.delete({
+            index: INDICES.patients,
+            id,
+            refresh: "wait_for",
+        });
+    } catch (error: any) {
+        if (error.meta?.statusCode === 404) return;
+        throw error;
+    }
+}
+
 function addDays(isoDate: string, days: number): string {
     const date = new Date(isoDate);
     date.setDate(date.getDate() + days);

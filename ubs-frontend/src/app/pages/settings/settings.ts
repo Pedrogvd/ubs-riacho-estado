@@ -21,6 +21,7 @@ export class Settings implements OnInit {
   patients = signal<Patient[]>([]);
   patientsPage = signal(1);
   patientSearch = signal('');
+  patientDeleteError = signal('');
 
   filteredPatients = computed(() => {
     const search = this.patientSearch().trim().toLowerCase();
@@ -97,6 +98,23 @@ export class Settings implements OnInit {
   private loadPatients(): void {
     this.patientsService.list().subscribe((data) => {
       this.patients.set(data);
+    });
+  }
+
+  // exclusão de paciente de teste (ou qualquer cadastro indevido): some
+  // junto o histórico de visitas e IVCF-20 dele, então confirma antes —
+  // não tem como desfazer.
+  deletePatient(patient: Patient): void {
+    const confirmed = confirm(
+      `Excluir o paciente "${patient.name}"? Isso também apaga o histórico de visitas e de avaliações IVCF-20 dele. Essa ação não pode ser desfeita.`
+    );
+    if (!confirmed) return;
+
+    this.patientDeleteError.set('');
+
+    this.patientsService.delete(patient.id).subscribe({
+      next: () => this.loadPatients(),
+      error: () => this.patientDeleteError.set('Não foi possível excluir o paciente. Tente novamente.'),
     });
   }
 

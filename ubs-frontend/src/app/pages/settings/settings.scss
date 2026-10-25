@@ -281,9 +281,63 @@ tbody tr:hover {
   color: #025580;
 }
 
+.action-chip--danger {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.action-chip--danger:hover {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+// as chips de ação até aqui eram só <a> (navegação); "Excluir paciente" é um
+// <button> de verdade (precisa de (click), não de navegação). ".actions
+// button", mais acima, é uma regra legada (hoje sem nenhum uso real — era de
+// uma versão antiga da tela) que ainda bateria nesse botão com especificidade
+// maior que uma classe só, então essas regras repetem o mesmo escopo
+// ".actions button" pra garantir que ganham e o botão fica idêntico às
+// outras chips.
+.actions button.action-chip {
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: 62.4375rem;
+  border: 0.0625rem solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.actions button.action-chip--danger {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.actions button.action-chip--danger:hover {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
 
 .self-note {
   color: #94a3b8;
   font-size: 0.85rem;
   font-style: italic;
+}
+
+.error {
+  background: #fdecea;
+  color: #c0392b;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0 0;
 }

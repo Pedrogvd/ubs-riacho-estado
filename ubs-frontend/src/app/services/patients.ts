@@ -75,4 +75,8 @@ export class Patients {
   update(id: string, changes: UpdatePatientInput): Observable<Patient> {
     return this.http.patch<Patient>(`${this.apiUrl}/${id}`, changes);
   }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

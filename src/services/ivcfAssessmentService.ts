@@ -120,6 +120,16 @@ export async function listIvcfAssessmentsByPatient(patientId: string): Promise<I
     return result.body.hits.hits.map((hit: any) => hit._source as IvcfAssessment);
 }
 
+// apaga todas as avaliações IVCF-20 de um paciente — usado quando o
+// paciente em si é excluído, pra não deixar avaliação "órfã" no índice
+export async function deleteIvcfAssessmentsByPatient(patientId: string): Promise<void> {
+    await esClient.deleteByQuery({
+        index: INDICES.ivcfAssessments,
+        body: { query: { term: { patientId } } },
+        refresh: true,
+    });
+}
+
 export async function getIvcfAssessmentById(id: string): Promise<IvcfAssessment | null> {
     try {
         const result = await esClient.get({

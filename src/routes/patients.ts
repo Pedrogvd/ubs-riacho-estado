@@ -1,5 +1,7 @@
 import { Router } from "express";
-import { createPatient, listPatients, getPatient, updatePatient, VALID_CONDITIONS } from "../services/patientService";
+import { createPatient, listPatients, getPatient, updatePatient, deletePatient, VALID_CONDITIONS } from "../services/patientService";
+import { deleteVisitsByPatient } from "../services/visitService";
+import { deleteIvcfAssessmentsByPatient } from "../services/ivcfAssessmentService";
 
 export const patientsRouter = Router();
 
@@ -131,6 +133,29 @@ patientsRouter.patch("/:id", async (req, res) => {
         if (!updated) return res.status(404).json({ error: "Patient not found" });
 
         res.json(updated);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+})
+
+// exclusão de paciente: só admin pode excluir. Apaga também o histórico
+// clínico ligado a ele (visitas e avaliações IVCF-20) pra não deixar
+// registro órfão no índice — ação irreversível, usada principalmente pra
+// remover cadastros de teste.
+patientsRouter.delete("/:id", async (req, res) => {
+    try {
+        if (req.user!.role !== "admin") {
+            return res.status(403).json({ error: "only admin can delete patients" });
+        }
+
+        const existing = await getPatient(req.params.id);
+        if (!existing) return res.status(404).json({ error: "Patient not found" });
+
+        await deleteVisitsByPatient(req.params.id);
+        await deleteIvcfAssessmentsByPatient(req.params.id);
+        await deletePatient(req.params.id);
+
+        res.status(204).send();
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

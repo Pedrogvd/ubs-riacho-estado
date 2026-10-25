@@ -14,6 +14,10 @@
       <input type="text" placeholder="Buscar por nome..." [value]="patientSearch()" (input)="onPatientSearchChange($event)" class="filter-input" />
     </div>
 
+    @if (patientDeleteError()) {
+      <p class="error">{{ patientDeleteError() }}</p>
+    }
+
     <div class="table-scroll">
     <table>
       <thead>
@@ -44,6 +48,7 @@
               <a [routerLink]="['/ivcf/new', patient.id]" class="btn-link action-chip action-chip--primary">Editar IVCF-20</a>
               <a [routerLink]="['/ivcf/history', patient.id]" class="btn-link action-chip action-chip--primary">Histórico IVCF</a>
             </div>
+            <button type="button" class="btn-link action-chip action-chip--danger" (click)="deletePatient(patient)">Excluir paciente</button>
           </td>
         </tr>
         } @empty {

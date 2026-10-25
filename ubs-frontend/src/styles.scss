@@ -144,9 +144,10 @@ main.app-content > router-outlet + * {
     font-weight: 600;
   }
 
-  // "Editar dados do paciente" (e qualquer outro link solto fora do grid de
-  // ações clínicas) ocupa a linha inteira do cartão, sozinho.
-  td.actions > a.btn-link {
+  // "Editar dados do paciente", "Excluir paciente" (e qualquer outro
+  // link/botão solto fora do grid de ações clínicas) ocupa a linha inteira
+  // do cartão, sozinho.
+  td.actions > .btn-link {
     flex: 1 1 100%;
   }
 

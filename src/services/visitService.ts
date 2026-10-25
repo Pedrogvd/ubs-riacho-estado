@@ -38,6 +38,16 @@ export async function createVisit (input: CreateVisitInput, professionalId: stri
 
 // scopeToProfessionalId: quando informado, só retorna visitas de pacientes
 // cujo ACS responsável é esse profissional (usado pra quem não é admin)
+// apaga todas as visitas de um paciente — usado quando o paciente em si
+// é excluído, pra não deixar visita "órfã" (sem paciente) no índice
+export async function deleteVisitsByPatient(patientId: string): Promise<void> {
+    await esClient.deleteByQuery({
+        index: INDICES.visits,
+        body: { query: { term: { patientId } } },
+        refresh: true,
+    });
+}
+
 export async function listVisits(scopeToProfessionalId?: string): Promise<Visit[]> {
     const result = await esClient.search({
         index: INDICES.visits,
