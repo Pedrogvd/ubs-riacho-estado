@@ -90,6 +90,25 @@
           <span class="switch__track"></span>
         </label>
       </div>
+
+      <div class="reset-password-row">
+        <div class="toggle-row__text">
+          <span class="toggle-row__label">Senha de acesso</span>
+          <span class="toggle-row__hint">Gera uma senha temporária nova pra essa pessoa</span>
+        </div>
+        <button type="button" class="btn-reset-password" (click)="resetPassword()">Resetar senha</button>
+      </div>
+
+      @if (resetPasswordResult(); as tempPassword) {
+      <div class="reset-password-result">
+        <p>Nova senha temporária: <strong>{{ tempPassword }}</strong></p>
+        <p class="reset-password-note">Repasse essa senha pro profissional. Ela não aparece de novo depois que você sair daqui.</p>
+      </div>
+      }
+
+      @if (resetPasswordError()) {
+      <span class="field-error">{{ resetPasswordError() }}</span>
+      }
       }
     </div>
     }

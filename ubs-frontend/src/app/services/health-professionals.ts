@@ -56,4 +56,14 @@ export class HealthProfessionals {
   update(id: string, changes: UpdateHealthProfessionalInput): Observable<HealthProfessional> {
     return this.http.patch<HealthProfessional>(`${this.apiUrl}/${id}`, changes);
   }
+
+  // troca a própria senha (precisa confirmar a senha atual)
+  changeOwnPassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.apiUrl}/me/password`, { currentPassword, newPassword });
+  }
+
+  // admin reseta a senha de outro profissional; sem senha informada, o backend gera uma temporária
+  resetPassword(id: string): Observable<{ message: string; temporaryPassword?: string }> {
+    return this.http.patch<{ message: string; temporaryPassword?: string }>(`${this.apiUrl}/${id}/password`, {});
+  }
 }

@@ -25,6 +25,9 @@ export class ProfessionalForm implements OnInit {
   professional = signal<HealthProfessional | null>(null);
   private professionalId: string | null = null;
 
+  resetPasswordResult = signal<string | null>(null);
+  resetPasswordError = signal('');
+
   // admin editando o próprio perfil não pode mexer no próprio role/status
   isSelf = computed(() => this.professional()?.id === this.authService.getProfessionalId());
 
@@ -79,6 +82,24 @@ export class ProfessionalForm implements OnInit {
 
     this.healthProfessionalsService.update(this.professionalId, { active: !current.active }).subscribe(() => {
       this.loadProfessional(this.professionalId!);
+    });
+  }
+
+  // admin reseta a senha de outra pessoa; o backend gera uma temporária e devolve ela aqui,
+  // já que não existe envio de email pra entregar a senha nova direto pro profissional
+  resetPassword(): void {
+    if (!this.professionalId) return;
+
+    this.resetPasswordError.set('');
+    this.resetPasswordResult.set(null);
+
+    this.healthProfessionalsService.resetPassword(this.professionalId).subscribe({
+      next: (response) => {
+        this.resetPasswordResult.set(response.temporaryPassword ?? null);
+      },
+      error: () => {
+        this.resetPasswordError.set('Não foi possível resetar a senha.');
+      },
     });
   }
 

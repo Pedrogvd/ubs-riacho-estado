@@ -1,5 +1,6 @@
 import { Router } from "express"
-import { createHealthProfessional, listHealthProfessionals, getHealthProfessionalById, updateHealthProfessional } from "../services/healthProfessionalService"
+import { createHealthProfessional, listHealthProfessionals, getHealthProfessionalById, updateHealthProfessional, changeOwnPassword, resetPasswordByAdmin } from "../services/healthProfessionalService"
+import { generateTempPassword } from "../utils/generatePassword"
 import { requireAuth } from "../middleware/requireAuth"
 import { requireAdmin } from "../middleware/requireAdmin"
 
@@ -110,6 +111,64 @@ healthProfessionalRouter.patch("/:id", requireAuth, requireAdmin, async (req, re
         if (!updated) return res.status(404).json({ error: "health professional not found" });
 
         res.json(updated);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+})
+
+// qualquer profissional logado troca a própria senha, desde que informe a senha atual
+healthProfessionalRouter.patch("/me/password", requireAuth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: "currentPassword and newPassword are required" });
+        }
+
+        if (typeof newPassword !== "string" || newPassword.length < 6) {
+            return res.status(400).json({ error: "newPassword must be at least 6 characters" });
+        }
+
+        const result = await changeOwnPassword(req.user!.professionalId, currentPassword, newPassword);
+
+        if (result === "not_found") {
+            return res.status(404).json({ error: "health professional not found" });
+        }
+
+        if (result === "wrong_password") {
+            return res.status(400).json({ error: "current password is incorrect" });
+        }
+
+        res.json({ message: "password updated successfully" });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+})
+
+// só admin reseta a senha de outro profissional; se não mandar newPassword, gera uma temporária
+// (não existe fluxo de "esqueci minha senha" por email, porque o projeto não tem envio de email)
+healthProfessionalRouter.patch("/:id/password", requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const targetId = req.params.id;
+        if (typeof targetId !== "string") {
+            return res.status(400).json({ error: "invalid id" });
+        }
+
+        let { newPassword } = req.body;
+        let generated = false;
+
+        if (!newPassword) {
+            newPassword = generateTempPassword();
+            generated = true;
+        }
+
+        const updated = await resetPasswordByAdmin(targetId, newPassword);
+        if (!updated) return res.status(404).json({ error: "health professional not found" });
+
+        res.json({
+            message: "password reset successfully",
+            ...(generated ? { temporaryPassword: newPassword } : {}),
+        });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

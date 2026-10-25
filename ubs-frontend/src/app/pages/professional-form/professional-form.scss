@@ -215,3 +215,47 @@ button:disabled {
   font-style: italic;
   margin: 0.5rem 0 0;
 }
+.reset-password-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.btn-reset-password {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: 0.0625rem solid #0f9d8f;
+  color: #0f9d8f;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-reset-password:hover {
+  background: rgba(15, 157, 143, 0.08);
+}
+
+.reset-password-result {
+  background: #ecfdf5;
+  border: 0.0625rem solid #a7f3d0;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.reset-password-result p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #065f46;
+}
+
+.reset-password-note {
+  margin-top: 0.35rem !important;
+  font-size: 0.8rem !important;
+  color: #047857 !important;
+}

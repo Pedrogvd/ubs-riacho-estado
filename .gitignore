@@ -9,6 +9,10 @@ dist/
 .env.local
 .env.*.local
 
+# Scripts de seed (contêm dados reais de pessoas — nome, CPF — nunca commitar)
+seed*.js
+seed*.ts
+
 # Logs
 npm-debug.log*
 *.log

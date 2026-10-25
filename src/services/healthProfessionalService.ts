@@ -162,3 +162,59 @@ export async function updateHealthProfessional(
 
     return toSafeProfessional(source);
 }
+
+
+export async function changeOwnPassword(
+    id: string,
+    currentPassword: string,
+    newPassword: string
+): Promise<"ok" | "not_found" | "wrong_password"> {
+    let professional: HealthProfessional | undefined;
+
+    try {
+        const result = await esClient.get({
+            index: INDICES.healthProfessionals,
+            id,
+        });
+        professional = result.body._source as HealthProfessional | undefined;
+    } catch (error: any) {
+        if (error.meta?.statusCode === 404) return "not_found";
+        throw error;
+    }
+
+    if (!professional) return "not_found";
+
+    const passwordMatches = await bcrypt.compare(currentPassword, professional.passwordHash);
+    if (!passwordMatches) return "wrong_password";
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await esClient.update({
+        index: INDICES.healthProfessionals,
+        id,
+        body: { doc: { passwordHash } },
+        refresh: "wait_for",
+    });
+
+    return "ok";
+}
+
+// admin reseta a senha de outro profissional (ex: usuário esqueceu e não tem como
+// recuperar por email, já que não existe envio de email configurado no projeto)
+export async function resetPasswordByAdmin(id: string, newPassword: string): Promise<boolean> {
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    try {
+        await esClient.update({
+            index: INDICES.healthProfessionals,
+            id,
+            body: { doc: { passwordHash } },
+            refresh: "wait_for",
+        });
+    } catch (error: any) {
+        if (error.meta?.statusCode === 404) return false;
+        throw error;
+    }
+
+    return true;
+}
