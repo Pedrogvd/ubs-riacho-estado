@@ -20,15 +20,31 @@ export const CONDITION_OPTIONS: { value: string; label: string }[] = [
   { value: 'substance_dependency', label: 'Dependência química' },
 ];
 
+// "AAAA-MM-DD" (data pura, sem hora) a partir de um Date, usando os
+// componentes LOCAIS (não toISOString(), que usa UTC e, no horário de
+// Brasília, pode "adiantar" a data em até 3h perto da meia-noite — foi
+// exatamente esse tipo de bug que corrigimos no formulário do IVCF-20).
+function toLocalDateString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+// Interpreta "AAAA-MM-DD" como meia-noite no fuso LOCAL. new Date("AAAA-MM-DD")
+// sem isso trata a string como UTC, o que no horário de Brasília "atrasa" a
+// data em até 3h — o mesmo problema, só que ao ler a data em vez de salvar.
+function parseLocalDate(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Validator customizado: rejeita datas depois de hoje
 function notFutureDateValidator(control: AbstractControl): ValidationErrors | null {
   if (!control.value) {
     return null;
   }
 
-  const inputDate = new Date(control.value);
-  const today = new Date();
-  today.setHours(23, 59, 59, 999); // permite qualquer horário de hoje
+  const inputDate = parseLocalDate(control.value);
+  const today = parseLocalDate(toLocalDateString(new Date()));
 
   return inputDate > today ? { futureDate: true } : null;
 }
@@ -56,7 +72,7 @@ export class PatientForm implements OnInit {
   conditionOptions = CONDITION_OPTIONS;
   selectedConditions: string[] = [];
   healthProfessionals = signal<HealthProfessional[]>([]);
-  today = new Date().toISOString().split('T')[0]; // pro atributo max do input date
+  today = toLocalDateString(new Date()); // pro atributo max do input date
 
   activeHealthProfessionals = computed(() => this.healthProfessionals().filter((p) => p.active));
 
