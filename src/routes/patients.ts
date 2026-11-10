@@ -9,8 +9,8 @@ patientsRouter.post("/", async (req, res) => {
     try {
         const { name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, acsResponsavelId } = req.body;
 
-        if (!name || !cpf || !priority || !visitPeriodicityDays) {
-            return res.status(400).json({ error: "name, cpf, priority and visitPeriodicityDays are required" });
+        if (!name || !cpf) {
+            return res.status(400).json({ error: "name and cpf are required" });
         }
 
         if (!/^\d{11}$/.test(cpf)) {
@@ -40,9 +40,9 @@ patientsRouter.post("/", async (req, res) => {
             address: address || "",
             phoneNumber: phoneNumber || "",
             dateOfBirth: dateOfBirth || "",
-            priority,
+            priority: priority || "medium",
             conditions: conditions || [],
-            visitPeriodicityDays,
+            visitPeriodicityDays: visitPeriodicityDays || 30,
             cns: cns || "",
             microarea: microarea || "",
             acsResponsavelId: resolvedAcsResponsavelId,

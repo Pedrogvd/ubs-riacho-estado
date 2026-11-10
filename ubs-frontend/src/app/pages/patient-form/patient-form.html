@@ -71,7 +71,7 @@
     <p class="acs-note">{{ isEditMode() ? 'Você é o ACS responsável por este paciente.' : 'Este paciente ficará sob sua responsabilidade.' }}</p>
     }
     <label>
-      <span class="field-label">Prioridade <span class="required">*</span></span>
+      <span class="field-label">Prioridade</span>
       <select formControlName="priority">
         <option value="high">Alta</option>
         <option value="medium">Média</option>
@@ -91,7 +91,7 @@
     </fieldset>
 
     <label>
-      <span class="field-label">Periodicidade das visitas (dias) <span class="required">*</span></span>
+      <span class="field-label">Periodicidade das visitas (dias)</span>
       <input type="number" formControlName="visitPeriodicityDays" />
       @if (getError('visitPeriodicityDays'); as error) {
       <span class="field-error">{{ error }}</span>
