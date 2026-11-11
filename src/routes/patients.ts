@@ -128,7 +128,9 @@ patientsRouter.patch("/:id", async (req, res) => {
         }
 
         const updates: Record<string, unknown> = {
-            name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, active,
+            name, cpf, address, phoneNumber, dateOfBirth,
+            priority: priority === "" ? "medium" : priority,
+            conditions, visitPeriodicityDays, cns, microarea, active,
         };
 
         // só admin pode reatribuir o ACS responsável por um paciente
