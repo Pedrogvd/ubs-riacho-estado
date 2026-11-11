@@ -10,22 +10,45 @@
       }
     </label>
 
-    <label>
-      <span class="field-label">CPF <span class="required">*</span></span>
-      <input type="tel" inputmode="numeric" maxlength="14" formControlName="cpf" (input)="formatCpf($event)" />
-      @if (getError('cpf'); as error) {
-      <span class="field-error">{{ error }}</span>
-      }
-    </label>
+    <fieldset class="identifier-fieldset">
+      <legend>Documento do paciente</legend>
+      <p class="identifier-hint">Informe o CPF, o CNS, ou os dois.</p>
 
-    <label>
-      <span class="field-label">CNS</span>
-      <input type="tel" inputmode="numeric" maxlength="15" formControlName="cns"
-        (input)="restrictToDigits('cns', $event)" />
-      @if (getError('cns'); as error) {
-      <span class="field-error">{{ error }}</span>
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="informCpf" (change)="onToggleIdentifier()" />
+        Informar CPF
+      </label>
+
+      @if (isCpfInformed()) {
+      <label>
+        <span class="field-label">CPF <span class="required">*</span></span>
+        <input type="tel" inputmode="numeric" maxlength="14" formControlName="cpf" (input)="formatCpf($event)" />
+        @if (getError('cpf'); as error) {
+        <span class="field-error">{{ error }}</span>
+        }
+      </label>
       }
-    </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="informCns" (change)="onToggleIdentifier()" />
+        Informar CNS
+      </label>
+
+      @if (isCnsInformed()) {
+      <label>
+        <span class="field-label">CNS <span class="required">*</span></span>
+        <input type="tel" inputmode="numeric" maxlength="15" formControlName="cns"
+          (input)="restrictToDigits('cns', $event)" />
+        @if (getError('cns'); as error) {
+        <span class="field-error">{{ error }}</span>
+        }
+      </label>
+      }
+
+      @if (submitted() && form.hasError('missingIdentifier')) {
+      <span class="field-error">Selecione e informe pelo menos um: CPF ou CNS.</span>
+      }
+    </fieldset>
 
     <label>
       <span class="field-label">Endereço <span class="required">*</span></span>

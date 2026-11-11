@@ -45,12 +45,20 @@ export class Patients implements OnInit {
     return this.filteredPatients().slice(start, start + PAGE_SIZE);
   });
 
+  patientDeleteError = signal("");
+  patientToDelete = signal<Patient | null>(null);
+  deletingPatient = signal(false);
+
   constructor(
     private patientsService: PatientsService,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.loadPatients();
+  }
+
+  private loadPatients(): void {
     this.patientsService.list().subscribe((data) => {
       this.patients.set(data);
     });
@@ -58,6 +66,40 @@ export class Patients implements OnInit {
 
   isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  // mesma lógica da tela de Usuários: pede confirmação num modal do próprio
+  // site antes de excluir, já que também apaga o histórico de visitas e
+  // IVCF-20 do paciente e não tem como desfazer.
+  askDeletePatient(patient: Patient): void {
+    this.patientDeleteError.set("");
+    this.patientToDelete.set(patient);
+  }
+
+  cancelDeletePatient(): void {
+    if (this.deletingPatient()) return;
+    this.patientToDelete.set(null);
+    this.patientDeleteError.set("");
+  }
+
+  confirmDeletePatient(): void {
+    const patient = this.patientToDelete();
+    if (!patient) return;
+
+    this.deletingPatient.set(true);
+    this.patientDeleteError.set("");
+
+    this.patientsService.delete(patient.id).subscribe({
+      next: () => {
+        this.deletingPatient.set(false);
+        this.patientToDelete.set(null);
+        this.loadPatients();
+      },
+      error: () => {
+        this.deletingPatient.set(false);
+        this.patientDeleteError.set("Não foi possível excluir o paciente. Tente novamente.");
+      },
+    });
   }
 
   onSearchChange(event: Event): void {

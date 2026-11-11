@@ -49,6 +49,14 @@ function notFutureDateValidator(control: AbstractControl): ValidationErrors | nu
   return inputDate > today ? { futureDate: true } : null;
 }
 
+// Validator do form inteiro: exige que pelo menos um dos dois identificadores
+// (CPF ou CNS) tenha sido selecionado pelo usuário pra informar
+function atLeastOneIdentifierValidator(group: AbstractControl): ValidationErrors | null {
+  const informCpf = group.get('informCpf')?.value;
+  const informCns = group.get('informCns')?.value;
+  return informCpf || informCns ? null : { missingIdentifier: true };
+}
+
 // Mensagem de erro por campo, indexada pela chave do erro (required, pattern, futureDate...)
 const FIELD_ERROR_MESSAGES: Record<string, Record<string, string>> = {
   name: { required: 'Nome é obrigatório' },
@@ -56,7 +64,7 @@ const FIELD_ERROR_MESSAGES: Record<string, Record<string, string>> = {
   address: { required: 'Endereço é obrigatório' },
   phoneNumber: { required: 'Telefone é obrigatório', pattern: 'Telefone deve ter 10 ou 11 dígitos (com DDD)' },
   dateOfBirth: { required: 'Data de nascimento é obrigatória', futureDate: 'Data de nascimento não pode ser no futuro' },
-  cns: { pattern: 'CNS deve ter 15 dígitos' },
+  cns: { required: 'CNS é obrigatório', pattern: 'CNS deve ter 15 dígitos' },
   priority: { required: 'Prioridade é obrigatória' },
   visitPeriodicityDays: { required: 'Periodicidade é obrigatória' },
 };
@@ -77,6 +85,7 @@ export class PatientForm implements OnInit {
   activeHealthProfessionals = computed(() => this.healthProfessionals().filter((p) => p.active));
 
   isEditMode = signal(false);
+  submitted = signal(false);
   private patientId: string | null = null;
 
   constructor(
@@ -89,17 +98,21 @@ export class PatientForm implements OnInit {
   ) {
     this.form = this.fb.nonNullable.group({
       name: ['', Validators.required],
+      informCpf: [true],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      informCns: [false],
+      cns: ['', Validators.pattern(/^\d{15}$/)],
       address: ['', Validators.required],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
       dateOfBirth: ['', [Validators.required, notFutureDateValidator]],
       priority: ['medium' as 'high' | 'medium' | 'low'],
       visitPeriodicityDays: [30],
-      cns: ['', Validators.pattern(/^\d{15}$/)],
       microarea: [''],
       acsResponsavelId: [''],
       active: [true],
-    });
+    }, { validators: atLeastOneIdentifierValidator });
+
+    this.updateIdentifierValidators();
   }
 
   ngOnInit(): void {
@@ -117,17 +130,20 @@ export class PatientForm implements OnInit {
       this.selectedConditions = [...patient.conditions];
       this.form.patchValue({
         name: patient.name,
+        informCpf: !!patient.cpf,
         cpf: patient.cpf,
+        informCns: !!patient.cns,
+        cns: patient.cns,
         address: patient.address,
         phoneNumber: patient.phoneNumber,
         dateOfBirth: patient.dateOfBirth,
         priority: patient.priority,
         visitPeriodicityDays: patient.visitPeriodicityDays,
-        cns: patient.cns,
         microarea: patient.microarea,
         acsResponsavelId: patient.acsResponsavelId,
         active: patient.active,
       });
+      this.updateIdentifierValidators();
     });
   }
 
@@ -187,6 +203,44 @@ export class PatientForm implements OnInit {
     input.value = formatted;
   }
 
+  isCpfInformed(): boolean {
+    return this.form.get('informCpf')!.value;
+  }
+
+  isCnsInformed(): boolean {
+    return this.form.get('informCns')!.value;
+  }
+
+  // Chamado quando o usuário marca/desmarca "Informar CPF" ou "Informar CNS".
+  // O campo correspondente só fica obrigatório (e só participa da validação
+  // de padrão) enquanto estiver marcado; ao desmarcar, o valor é limpo pra
+  // não ir pro back-end um CPF/CNS desatualizado que o usuário escondeu.
+  onToggleIdentifier(): void {
+    this.updateIdentifierValidators();
+  }
+
+  private updateIdentifierValidators(): void {
+    const cpfControl = this.form.get('cpf')!;
+    const cnsControl = this.form.get('cns')!;
+
+    if (this.isCpfInformed()) {
+      cpfControl.setValidators([Validators.required, Validators.pattern(/^\d{11}$/)]);
+    } else {
+      cpfControl.setValidators([Validators.pattern(/^\d{11}$/)]);
+      cpfControl.setValue('');
+    }
+
+    if (this.isCnsInformed()) {
+      cnsControl.setValidators([Validators.required, Validators.pattern(/^\d{15}$/)]);
+    } else {
+      cnsControl.setValidators([Validators.pattern(/^\d{15}$/)]);
+      cnsControl.setValue('');
+    }
+
+    cpfControl.updateValueAndValidity({ emitEvent: false });
+    cnsControl.updateValueAndValidity({ emitEvent: false });
+  }
+
   toggleCondition(value: string, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
 
@@ -212,12 +266,16 @@ export class PatientForm implements OnInit {
   }
 
   onSubmit(): void {
+    this.submitted.set(true);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched(); // garante que os erros apareçam mesmo se o submit disparar via Enter
       return;
     }
 
-    const value = this.form.getRawValue();
+    // informCpf/informCns só controlam a UI (quais campos aparecem/são
+    // obrigatórios); a API não precisa deles, só dos valores de cpf/cns em si
+    const { informCpf, informCns, ...value } = this.form.getRawValue();
     const destination = this.isAdmin() ? '/settings' : '/patients';
 
     if (this.isEditMode() && this.patientId) {

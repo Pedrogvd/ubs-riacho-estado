@@ -60,6 +60,7 @@
             <a [routerLink]="['/ivcf/new', patient.id]" class="btn-link action-chip action-chip--primary">Editar IVCF-20</a>
             <a [routerLink]="['/ivcf/history', patient.id]" class="btn-link action-chip action-chip--primary">Histórico IVCF</a>
           </div>
+          <button type="button" class="btn-link action-chip action-chip--danger" (click)="askDeletePatient(patient)">Excluir paciente</button>
         </td>
       </tr>
       } @empty {
@@ -79,5 +80,28 @@
 
   @if (filteredPatients().length > 0) {
   <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" (pageChange)="currentPage.set($event)" />
+  }
+
+  @if (patientToDelete(); as patient) {
+    <div class="modal-overlay" (click)="cancelDeletePatient()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h2>Excluir paciente</h2>
+        <p>
+          Excluir o paciente <strong>"{{ patient.name }}"</strong>? Isso também apaga o histórico de visitas e de
+          avaliações IVCF-20 dele. Essa ação não pode ser desfeita.
+        </p>
+
+        @if (patientDeleteError()) {
+          <p class="error">{{ patientDeleteError() }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" [disabled]="deletingPatient()" (click)="cancelDeletePatient()">Cancelar</button>
+          <button type="button" class="btn-danger-solid" [disabled]="deletingPatient()" (click)="confirmDeletePatient()">
+            {{ deletingPatient() ? 'Excluindo...' : 'Excluir paciente' }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

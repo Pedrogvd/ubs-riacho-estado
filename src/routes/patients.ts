@@ -9,11 +9,15 @@ patientsRouter.post("/", async (req, res) => {
     try {
         const { name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, acsResponsavelId } = req.body;
 
-        if (!name || !cpf) {
-            return res.status(400).json({ error: "name and cpf are required" });
+        if (!name) {
+            return res.status(400).json({ error: "name is required" });
         }
 
-        if (!/^\d{11}$/.test(cpf)) {
+        if (!cpf && !cns) {
+            return res.status(400).json({ error: "at least one of cpf or cns is required" });
+        }
+
+        if (cpf && !/^\d{11}$/.test(cpf)) {
             return res.status(400).json({ error: "cpf must contain exactly 11 digits" });
         }
 
@@ -36,7 +40,7 @@ patientsRouter.post("/", async (req, res) => {
 
         const patient = await createPatient({
             name,
-            cpf,
+            cpf: cpf || "",
             address: address || "",
             phoneNumber: phoneNumber || "",
             dateOfBirth: dateOfBirth || "",
@@ -95,7 +99,7 @@ patientsRouter.patch("/:id", async (req, res) => {
 
         const { name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, acsResponsavelId, active } = req.body;
 
-        if (cpf !== undefined && !/^\d{11}$/.test(cpf)) {
+        if (cpf !== undefined && cpf !== "" && !/^\d{11}$/.test(cpf)) {
             return res.status(400).json({ error: "cpf must contain exactly 11 digits" });
         }
 
@@ -105,6 +109,14 @@ patientsRouter.patch("/:id", async (req, res) => {
 
         if (cns !== undefined && cns !== "" && !/^\d{15}$/.test(cns)) {
             return res.status(400).json({ error: "cns must contain exactly 15 digits" });
+        }
+
+        // depois de aplicar o patch, tem que sobrar pelo menos um dos dois
+        // identificadores (cpf ou cns) — mesma regra do cadastro
+        const resultingCpf = cpf !== undefined ? cpf : existing.cpf;
+        const resultingCns = cns !== undefined ? cns : existing.cns;
+        if (!resultingCpf && !resultingCns) {
+            return res.status(400).json({ error: "at least one of cpf or cns is required" });
         }
 
         if (conditions !== undefined && conditions.some((condition: string) => !(VALID_CONDITIONS as readonly string[]).includes(condition))) {
@@ -138,18 +150,20 @@ patientsRouter.patch("/:id", async (req, res) => {
     }
 })
 
-// exclusão de paciente: só admin pode excluir. Apaga também o histórico
-// clínico ligado a ele (visitas e avaliações IVCF-20) pra não deixar
-// registro órfão no índice — ação irreversível, usada principalmente pra
-// remover cadastros de teste.
+// exclusão de paciente: admin pode excluir qualquer um; ACS comum só pode
+// excluir os pacientes sob sua própria responsabilidade (mesma regra de
+// acesso usada na edição). Apaga também o histórico clínico ligado a ele
+// (visitas e avaliações IVCF-20) pra não deixar registro órfão no índice —
+// ação irreversível, usada principalmente pra remover cadastros de teste.
 patientsRouter.delete("/:id", async (req, res) => {
     try {
-        if (req.user!.role !== "admin") {
-            return res.status(403).json({ error: "only admin can delete patients" });
-        }
-
         const existing = await getPatient(req.params.id);
         if (!existing) return res.status(404).json({ error: "Patient not found" });
+
+        const isAdmin = req.user!.role === "admin";
+        if (!isAdmin && existing.acsResponsavelId !== req.user!.professionalId) {
+            return res.status(403).json({ error: "you don't have access to this patient" });
+        }
 
         await deleteVisitsByPatient(req.params.id);
         await deleteIvcfAssessmentsByPatient(req.params.id);

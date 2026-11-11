@@ -270,3 +270,133 @@ tbody tr:hover {
     flex: 1 1 100%;
   }
 }
+.action-chip--danger {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.action-chip--danger:hover {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+// "Excluir paciente" é um <button> de verdade (precisa de (click), não de
+// navegação), então repete o seletor ".actions button" pra ganhar da regra
+// mais específica e ficar visualmente igual às outras chips (mesmo padrão
+// usado em settings.scss).
+.actions button.action-chip {
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: 62.4375rem;
+  border: 0.0625rem solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.actions button.action-chip--danger {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.actions button.action-chip--danger:hover {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+.error {
+  background: #fdecea;
+  color: #c0392b;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0 0;
+}
+
+// Modal de confirmação de exclusão de paciente — mesmo padrão visual dos
+// outros modais do app (session-expired-modal, change-password-modal,
+// settings).
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  max-width: 25rem;
+  width: 100%;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+}
+
+.modal-box h2 {
+  font-size: 1.25rem;
+  color: #1a2b3c;
+  margin: 0 0 0.75rem;
+}
+
+.modal-box p {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.modal-box .error {
+  margin: 0 0 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.modal-actions button {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.modal-actions .btn-cancel {
+  background: transparent;
+  color: #64748b;
+  border: 0.0625rem solid #cbd5e1;
+}
+
+.modal-actions .btn-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.modal-actions .btn-danger-solid {
+  background: #dc2626;
+  color: white;
+}
+
+.modal-actions .btn-danger-solid:hover:not(:disabled) {
+  background: #b91c1c;
+}
