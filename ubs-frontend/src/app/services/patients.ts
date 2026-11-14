@@ -10,7 +10,7 @@ export interface Patient {
   address: string;
   phoneNumber: string;
   dateOfBirth: string;
-  priority: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low" | "";
   conditions: string[];
   visitPeriodicityDays: number;
   active: boolean;
@@ -29,7 +29,7 @@ export interface CreatePatientInput {
   address: string;
   phoneNumber: string;
   dateOfBirth: string;
-  priority: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low" | "";
   conditions: string[];
   visitPeriodicityDays: number;
   cns: string;
@@ -43,7 +43,7 @@ export interface UpdatePatientInput {
   address?: string;
   phoneNumber?: string;
   dateOfBirth?: string;
-  priority?: "high" | "medium" | "low";
+  priority?: "high" | "medium" | "low" | "";
   conditions?: string[];
   visitPeriodicityDays?: number;
   cns?: string;

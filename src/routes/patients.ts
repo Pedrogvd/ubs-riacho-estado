@@ -44,7 +44,7 @@ patientsRouter.post("/", async (req, res) => {
             address: address || "",
             phoneNumber: phoneNumber || "",
             dateOfBirth: dateOfBirth || "",
-            priority: priority || "medium",
+            priority: priority || "",
             conditions: conditions || [],
             visitPeriodicityDays: visitPeriodicityDays || 30,
             cns: cns || "",
@@ -129,7 +129,7 @@ patientsRouter.patch("/:id", async (req, res) => {
 
         const updates: Record<string, unknown> = {
             name, cpf, address, phoneNumber, dateOfBirth,
-            priority: priority === "" ? "medium" : priority,
+            priority,
             conditions, visitPeriodicityDays, cns, microarea, active,
         };
 

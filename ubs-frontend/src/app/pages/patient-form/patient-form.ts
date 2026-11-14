@@ -105,7 +105,7 @@ export class PatientForm implements OnInit {
       address: ['', Validators.required],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
       dateOfBirth: ['', [Validators.required, notFutureDateValidator]],
-      priority: ['' as 'high' | 'medium' | 'low'],
+      priority: ['' as 'high' | 'medium' | 'low' | ''],
       visitPeriodicityDays: [30],
       microarea: [''],
       acsResponsavelId: [''],
