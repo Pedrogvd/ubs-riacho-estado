@@ -1,6 +1,6 @@
 import { Router, Request } from "express";
 import { createIvcfAssessment, listIvcfAssessmentsByPatient, getIvcfAssessmentById } from "../services/ivcfAssessmentService";
-import { getPatient } from "../services/patientService";
+import { getPatient, isOnPatientTeam } from "../services/patientService";
 
 export const ivcfAssessmentsRouter = Router();
 
@@ -14,7 +14,7 @@ async function checkPatientAccess(
     if (!patient) return { ok: false, status: 404, error: "patient not found" };
 
     const isAdmin = req.user!.role === "admin";
-    if (!isAdmin && patient.acsResponsavelId !== req.user!.professionalId) {
+    if (!isAdmin && !isOnPatientTeam(patient, req.user!.professionalId)) {
         return { ok: false, status: 403, error: "you don't have access to this patient" };
     }
 

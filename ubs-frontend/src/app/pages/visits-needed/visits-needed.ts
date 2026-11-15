@@ -26,7 +26,9 @@ export class VisitsNeeded implements OnInit {
   currentPage = signal(1);
 
   searchTerm = signal('');
-  acsFilter = signal<'all' | string>('all');
+  // filtra por qualquer um dos 3 papeis do time (ACS, medico ou enfermeiro),
+  // nao so por ACS -- por isso o dropdown lista todos os profissionais
+  professionalFilter = signal<'all' | string>('all');
 
   patientsNeedingVisit = computed(() => {
     return this.allPatients()
@@ -43,11 +45,18 @@ export class VisitsNeeded implements OnInit {
 
   filteredPatients = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
-    const acs = this.acsFilter();
+    const professionalId = this.professionalFilter();
 
     return this.patientsNeedingVisit().filter((patient) => {
       if (search && !patient.name.toLowerCase().includes(search)) return false;
-      if (acs !== 'all' && patient.acsResponsavelId !== acs) return false;
+      if (
+        professionalId !== 'all' &&
+        patient.communityHealthWorkerId !== professionalId &&
+        patient.doctorId !== professionalId &&
+        patient.nurseId !== professionalId
+      ) {
+        return false;
+      }
       return true;
     });
   });
@@ -84,14 +93,14 @@ export class VisitsNeeded implements OnInit {
     this.currentPage.set(1);
   }
 
-  onAcsFilterChange(event: Event): void {
-    this.acsFilter.set((event.target as HTMLSelectElement).value);
+  onProfessionalFilterChange(event: Event): void {
+    this.professionalFilter.set((event.target as HTMLSelectElement).value);
     this.currentPage.set(1);
   }
 
-  acsName(acsResponsavelId: string): string {
-    if (!acsResponsavelId) return '-';
-    const professional = this.healthProfessionals().find((p) => p.id === acsResponsavelId);
+  professionalName(professionalId: string): string {
+    if (!professionalId) return '-';
+    const professional = this.healthProfessionals().find((p) => p.id === professionalId);
     return professional?.name ?? '-';
   }
 

@@ -76,6 +76,15 @@ button:disabled {
   font-weight: 400;
 }
 
+.error {
+  background: #fdecea;
+  color: #c0392b;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem 0;
+}
+
 .account-panel {
   border-top: 0.0625rem solid #e2e8f0;
   padding-top: 1.1rem;
@@ -215,6 +224,37 @@ button:disabled {
   font-style: italic;
   margin: 0.5rem 0 0;
 }
+.specialty-select {
+  margin: 0;
+  padding: 0.5rem 2rem 0.5rem 0.9rem;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%230f9d8f'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0.0625rem solid #cbd5e1;
+  color: #334155;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease;
+}
+
+.specialty-select:hover {
+  border-color: #0f9d8f;
+}
+
+.specialty-select:focus-visible {
+  outline: none;
+  border-color: #0f9d8f;
+  box-shadow: 0 0 0 0.1875rem rgba(15, 157, 143, 0.18);
+}
+
 .reset-password-row {
   display: flex;
   align-items: center;

@@ -16,6 +16,30 @@ export const VALID_CONDITIONS = [
     "substance_dependency",
 ] as const;
 
+// normaliza nome pra comparar (minusculo, sem acento, sem espacos duplicados)
+// -- usado no aviso de possivel duplicado por nome + data de nascimento
+export function normalizeName(name: string): string {
+    return name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, " ");
+}
+
+// o paciente aparece pra um profissional comum se ele estiver em qualquer
+// uma das 3 funcoes do time (ACS, medico ou enfermeiro), nao so como ACS
+export function isOnPatientTeam(
+    patient: Pick<Patient, "communityHealthWorkerId" | "doctorId" | "nurseId">,
+    professionalId: string
+): boolean {
+    return (
+        patient.communityHealthWorkerId === professionalId ||
+        patient.doctorId === professionalId ||
+        patient.nurseId === professionalId
+    );
+}
+
 export async function createPatient(input: CreatePatientInput): Promise<Patient> {
     const patient: Patient = {
         id: crypto.randomUUID(),
@@ -33,7 +57,9 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
         nextVisitDue: null,
         cns: input.cns,
         microarea: input.microarea,
-        acsResponsavelId: input.acsResponsavelId,
+        communityHealthWorkerId: input.communityHealthWorkerId,
+        doctorId: input.doctorId,
+        nurseId: input.nurseId,
     }
 
     await esClient.index({
@@ -46,8 +72,17 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
     return patient;
 }
 
+// esse recurso ainda não está pronto pra ser mostrado pro usuário (critérios
+// ainda sendo validados), então por enquanto ele fica desligado e a função
+// sempre retorna "" (sem alerta). A lógica de cálculo continua abaixo, intacta,
+// pra quando for habilitado de novo — é só trocar esse valor pra true.
+const ALERT_LEVEL_ENABLED = false;
+
 export function calculateAlertLevel(patient: Patient, now: Date = new Date()): AlertLevel {
-    
+    if (!ALERT_LEVEL_ENABLED) {
+        return "";
+    }
+
     const in7Days = new Date(now);
     in7Days.setDate(in7Days.getDate() + 7);
 
@@ -90,7 +125,16 @@ export async function listPatients(scopeToProfessionalId?: string): Promise<Pati
         return patients;
     }
 
-    return patients.filter((patient) => patient.acsResponsavelId === scopeToProfessionalId);
+    // profissional comum ve o paciente se estiver em QUALQUER uma das 3
+    // funcoes do time (ACS, medico ou enfermeiro) — nao so como ACS, que
+    // era a regra antiga e causava gente recadastrando o mesmo paciente
+    // em perfis diferentes achando que "ainda nao existia"
+    return patients.filter(
+        (patient) =>
+            patient.communityHealthWorkerId === scopeToProfessionalId ||
+            patient.doctorId === scopeToProfessionalId ||
+            patient.nurseId === scopeToProfessionalId
+    );
 }
 
 export async function getPatient(id: string): Promise<PatientWithAlert | null> {
@@ -135,7 +179,12 @@ export async function updatePatientAfterVisit(patientId: string, visitDate: stri
     const patient = await getPatient(patientId)
     if (!patient) throw new Error(`Patient ${patientId} not found`);
 
-    const nextVisitDue = addDays(visitDate, patient.visitPeriodicityDays);
+    // salva-guarda: se por algum motivo o paciente estiver com periodicidade
+    // zerada/nula (bug antigo, ou dado legado), cai pro padrão de 30 dias em
+    // vez de gerar uma "próxima visita" igual à data da visita que acabou de
+    // ser registrada
+    const periodicityDays = patient.visitPeriodicityDays || 30;
+    const nextVisitDue = addDays(visitDate, periodicityDays);
 
     await esClient.update({
         index: INDICES.patients,
@@ -167,7 +216,7 @@ export async function deletePatient(id: string): Promise<void> {
     }
 }
 
-function addDays(isoDate: string, days: number): string {
+export function addDays(isoDate: string, days: number): string {
     const date = new Date(isoDate);
     date.setDate(date.getDate() + days);
     return date.toISOString();

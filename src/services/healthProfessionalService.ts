@@ -13,6 +13,7 @@ function toSafeProfessional(professional: HealthProfessional): Omit<HealthProfes
         phoneNumber: professional.phoneNumber,
         email: professional.email,
         role: professional.role ?? "professional",
+        specialty: professional.specialty ?? "",
         active: professional.active ?? true,
         createdAt: professional.createdAt,
     };
@@ -32,6 +33,7 @@ export async function createHealthProfessional(input: CreateHealthProfessionalIn
         // todo cadastro nasce como profissional comum e ativo; virar admin ou
         // ser desativado é feito depois, via tela de Usuários
         role: "professional",
+        specialty: "",
         active: true,
         createdAt: new Date().toISOString(),
     }
@@ -132,6 +134,7 @@ export async function updateHealthProfessional(
     id: string,
     updates: {
         role?: "admin" | "professional";
+        specialty?: "" | "chw" | "doctor" | "nurse";
         active?: boolean;
         name?: string;
         cpf?: string;

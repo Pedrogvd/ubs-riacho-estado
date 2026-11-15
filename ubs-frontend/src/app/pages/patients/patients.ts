@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { Patients as PatientsService, Patient } from '../../services/patients';
+import { HealthProfessionals as HealthProfessionalsService, HealthProfessional } from '../../services/health-professionals';
 import { Auth as AuthService } from '../../services/auth';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -15,6 +16,7 @@ const PAGE_SIZE = 5;
 })
 export class Patients implements OnInit {
   patients = signal<Patient[]>([]);
+  healthProfessionals = signal<HealthProfessional[]>([]);
   currentPage = signal(1);
 
   searchTerm = signal('');
@@ -51,11 +53,22 @@ export class Patients implements OnInit {
 
   constructor(
     private patientsService: PatientsService,
+    private healthProfessionalsService: HealthProfessionalsService,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.loadPatients();
+    this.healthProfessionalsService.list().subscribe((data) => {
+      this.healthProfessionals.set(data);
+    });
+  }
+
+  // nome do profissional pra mostrar nas colunas de ACS/Médico/Enfermeiro —
+  // em branco quando o paciente não tem ninguém naquela função ainda
+  professionalName(id: string): string {
+    if (!id) return '';
+    return this.healthProfessionals().find((p) => p.id === id)?.name ?? '';
   }
 
   private loadPatients(): void {

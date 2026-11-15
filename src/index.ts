@@ -10,6 +10,7 @@ import { dashboardRouter } from "./routes/dashboard";
 import { reportsRouter } from "./routes/reports";
 import { authRouter } from "./routes/auth";
 import { ivcfAssessmentsRouter } from "./routes/ivcfAssessments";
+import { conditionsRouter } from "./routes/conditions";
 import { requireAuth } from "./middleware/requireAuth";
 
 const app = express();
@@ -43,6 +44,7 @@ app.use("/visits", requireAuth, visitsRouter);
 app.use("/dashboard", requireAuth, dashboardRouter)
 app.use("/reports", requireAuth, reportsRouter)
 app.use("/ivcf-assessments", requireAuth, ivcfAssessmentsRouter)
+app.use("/conditions", requireAuth, conditionsRouter)
 app.use("/auth", requireAuth, authRouter)
 
 async function start() {

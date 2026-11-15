@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createVisit, listVisits, VALID_VISIT_OUTCOMES } from "../services/visitService";
-import { getPatient } from "../services/patientService";
+import { getPatient, isOnPatientTeam } from "../services/patientService";
 
 export const visitsRouter = Router();
 
@@ -21,11 +21,12 @@ visitsRouter.post("/", async (req, res) => {
         const professionalId = req.user!.professionalId;
         const isAdmin = req.user!.role === "admin";
 
-        // ACS comum só pode registrar visita em paciente que é dele
+        // profissional comum só pode registrar visita em paciente onde ele
+        // está no time (ACS, médico ou enfermeiro responsável)
         if (!isAdmin) {
             const patient = await getPatient(patientId);
             if (!patient) return res.status(404).json({ error: "patient not found" });
-            if (patient.acsResponsavelId !== professionalId) {
+            if (!isOnPatientTeam(patient, professionalId)) {
                 return res.status(403).json({ error: "you don't have access to this patient" });
             }
         }
@@ -58,7 +59,7 @@ visitsRouter.get("/", async (req, res) => {
         if (typeof patientId === "string") {
             const patient = await getPatient(patientId);
             if (!patient) return res.status(404).json({ error: "patient not found" });
-            if (!isAdmin && patient.acsResponsavelId !== req.user!.professionalId) {
+            if (!isAdmin && !isOnPatientTeam(patient, req.user!.professionalId)) {
                 return res.status(403).json({ error: "you don't have access to this patient" });
             }
         }

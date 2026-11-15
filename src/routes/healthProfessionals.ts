@@ -14,11 +14,24 @@ healthProfessionalRouter.post("/", async (req, res) => {
             return res.status(400).json({ error: "name, cpf, email and password are required" });
         }
 
+        // mesma normalizacao usada no cadastro de paciente: tira pontuacao
+        // antes de validar, pra aceitar tanto "09612621683" quanto
+        // "096.126.216-83" digitado ou colado
+        const normalizedCpf = String(cpf).replace(/\D/g, "");
+        if (!/^\d{11}$/.test(normalizedCpf)) {
+            return res.status(400).json({ error: "cpf must contain exactly 11 digits" });
+        }
+
+        const normalizedPhoneNumber = phoneNumber ? String(phoneNumber).replace(/\D/g, "") : "";
+        if (normalizedPhoneNumber && !/^\d{10,11}$/.test(normalizedPhoneNumber)) {
+            return res.status(400).json({ error: "phoneNumber must contain 10 or 11 digits" });
+        }
+
         const healthProfessional = await createHealthProfessional({
             name,
-            cpf,
+            cpf: normalizedCpf,
             address: address || "",
-            phoneNumber: phoneNumber || "",
+            phoneNumber: normalizedPhoneNumber,
             email,
             password,
         });
@@ -31,6 +44,7 @@ healthProfessionalRouter.post("/", async (req, res) => {
             phoneNumber: healthProfessional.phoneNumber,
             email: healthProfessional.email,
             role: healthProfessional.role,
+            specialty: healthProfessional.specialty,
             active: healthProfessional.active,
             createdAt: healthProfessional.createdAt,
         }; // we won't show the password on response
@@ -79,35 +93,63 @@ healthProfessionalRouter.patch("/:id", requireAuth, requireAdmin, async (req, re
             return res.status(400).json({ error: "invalid id" });
         }
 
-        const { role, active, name, cpf, address, phoneNumber, email } = req.body;
+        const { role, specialty, active, name, cpf, address, phoneNumber, email } = req.body;
 
         if (role !== undefined && role !== "admin" && role !== "professional") {
             return res.status(400).json({ error: "role must be 'admin' or 'professional'" });
+        }
+
+        if (specialty !== undefined && !["", "chw", "doctor", "nurse"].includes(specialty)) {
+            return res.status(400).json({ error: "specialty must be '', 'chw', 'doctor' or 'nurse'" });
         }
 
         if (active !== undefined && typeof active !== "boolean") {
             return res.status(400).json({ error: "active must be a boolean" });
         }
 
+        // mesma normalizacao do cadastro: tira pontuacao antes de validar, pra
+        // aceitar tanto "09612621683" quanto "096.126.216-83". Isso tambem
+        // corrige, na proxima edicao, cadastros antigos que foram salvos com
+        // o CPF/telefone ja formatado (com ponto, traco etc).
+        const normalizedCpf = cpf !== undefined ? String(cpf).replace(/\D/g, "") : undefined;
+        if (normalizedCpf !== undefined && !/^\d{11}$/.test(normalizedCpf)) {
+            return res.status(400).json({ error: "cpf must contain exactly 11 digits" });
+        }
+
+        const normalizedPhoneNumber = phoneNumber !== undefined ? String(phoneNumber).replace(/\D/g, "") : undefined;
+        if (normalizedPhoneNumber && !/^\d{10,11}$/.test(normalizedPhoneNumber)) {
+            return res.status(400).json({ error: "phoneNumber must contain 10 or 11 digits" });
+        }
+
         if (
             role === undefined &&
+            specialty === undefined &&
             active === undefined &&
             name === undefined &&
-            cpf === undefined &&
+            normalizedCpf === undefined &&
             address === undefined &&
-            phoneNumber === undefined &&
+            normalizedPhoneNumber === undefined &&
             email === undefined
         ) {
             return res.status(400).json({ error: "no fields to update were provided" });
         }
 
-        // ninguém muda o próprio perfil/status — evita se trancar pra fora sem querer.
+        // ninguém muda o próprio perfil/status/função — evita se trancar pra fora sem querer.
         // editar nome/cpf/endereço/telefone/email do próprio perfil continua liberado.
-        if (targetId === req.user!.professionalId && (role !== undefined || active !== undefined)) {
-            return res.status(400).json({ error: "you can't change your own role or active status" });
+        if (targetId === req.user!.professionalId && (role !== undefined || specialty !== undefined || active !== undefined)) {
+            return res.status(400).json({ error: "you can't change your own role, specialty or active status" });
         }
 
-        const updated = await updateHealthProfessional(targetId, { role, active, name, cpf, address, phoneNumber, email });
+        const updated = await updateHealthProfessional(targetId, {
+            ...(role !== undefined ? { role } : {}),
+            ...(specialty !== undefined ? { specialty } : {}),
+            ...(active !== undefined ? { active } : {}),
+            ...(name !== undefined ? { name } : {}),
+            ...(normalizedCpf !== undefined ? { cpf: normalizedCpf } : {}),
+            ...(address !== undefined ? { address } : {}),
+            ...(normalizedPhoneNumber !== undefined ? { phoneNumber: normalizedPhoneNumber } : {}),
+            ...(email !== undefined ? { email } : {}),
+        });
         if (!updated) return res.status(404).json({ error: "health professional not found" });
 
         res.json(updated);

@@ -117,6 +117,7 @@ table {
   }
 }
 
+
 thead {
   background: #1a2b3c;
 }
@@ -189,38 +190,84 @@ tbody tr:hover {
   color: #166534;
 }
 
+// "display: flex" direto no <td> tira a célula do comportamento normal de
+// tabela (deixa de esticar pra altura da linha e de usar o
+// vertical-align:middle padrão que as outras colunas usam), por isso o botão
+// ficava desalinhado verticalmente quando o nome do paciente quebrava em
+// várias linhas. Hoje só tem um botão aqui (o menu flutuante é
+// position:fixed e não participa do fluxo), então não precisa de flex: a
+// célula fica como table-cell normal e centraliza sozinha, igual as outras.
 .actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+  text-align: left;
 }
 
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 0.4rem;
-}
-
-.actions button {
-  padding: 0.4rem 0.8rem;
-  border: 0.0625rem solid #cbd5e1;
-  background: white;
+// botão "Ações" que abre o menu com as opções do paciente (ver .actions-menu
+// logo abaixo). Trocamos os 6 botões sempre visíveis por isso porque a
+// coluna inteira ficava larga demais e obrigava a tabela a rolar pro lado.
+// mesmo teal usado nos links e botões primários do resto do site (#0f9d8f),
+// em vez do cinza neutro -- esse botão é a única ação da linha agora, então
+// vale se destacar um pouco mais em vez de parecer um botão desabilitado
+.actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: 0.0625rem solid rgba(15, 157, 143, 0.35);
+  background: rgba(15, 157, 143, 0.08);
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f9d8f;
+  font-family: inherit;
 }
 
-.actions button:hover {
+.actions-trigger:hover {
+  background: rgba(15, 157, 143, 0.16);
+  border-color: #0f9d8f;
+  color: #0c8074;
+}
+
+// position:fixed (calculado em TS a partir do botão clicado) em vez de
+// absolute -- assim o menu nunca fica cortado pelo overflow-x do
+// .table-scroll, não importa o quanto a tabela tenha rolado pro lado
+.actions-menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  min-width: 13.75rem;
+  background: #ffffff;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+  padding: 0.35rem;
+  z-index: 20;
+}
+
+.actions-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.375rem;
+  color: #334155;
+  font-size: 0.85rem;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.actions-menu__item:hover {
   background: #f1f5f9;
 }
 
-.btn-danger {
-  color: #b91c1c;
-  border-color: #fecaca;
+.actions-menu__item--danger {
+  color: #dc2626;
 }
 
-.btn-danger:hover {
+.actions-menu__item--danger:hover {
   background: #fef2f2;
 }
 
@@ -235,102 +282,30 @@ tbody tr:hover {
   text-decoration: underline;
 }
 
-.action-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.65rem;
-  border-radius: 62.4375rem;
-  border: 0.0625rem solid #cbd5e1;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 0.76rem;
+// mesmo estilo do .btn-link, mas pra uma ação destrutiva (ex.: excluir
+// condição personalizada) -- usa <button> em vez de <a>, por isso reseta
+// border/background/font/padding que um botão nativo traria
+.btn-link-danger {
+  color: #dc2626;
   font-weight: 600;
   text-decoration: none;
-  white-space: nowrap;
-  line-height: 1.2;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.action-chip:hover {
-  background: #eef2f7;
-  border-color: #94a3b8;
-  color: #1a2b3c;
-}
-
-.action-chip--primary {
-  background: rgba(15, 157, 143, 0.08);
-  border-color: rgba(15, 157, 143, 0.3);
-  color: #0f9d8f;
-}
-
-.action-chip--primary:hover {
-  background: rgba(15, 157, 143, 0.16);
-  border-color: #0f9d8f;
-  color: #0c8074;
-}
-
-.action-chip--visit {
-  background: rgba(3, 105, 161, 0.08);
-  border-color: rgba(3, 105, 161, 0.3);
-  color: #0369a1;
-}
-
-.action-chip--visit:hover {
-  background: rgba(3, 105, 161, 0.16);
-  border-color: #0369a1;
-  color: #025580;
-}
-
-.action-chip--danger {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.3);
-  color: #dc2626;
-}
-
-.action-chip--danger:hover {
-  background: rgba(220, 38, 38, 0.16);
-  border-color: #dc2626;
-  color: #b91c1c;
-}
-
-// as chips de ação até aqui eram só <a> (navegação); "Excluir paciente" é um
-// <button> de verdade (precisa de (click), não de navegação). ".actions
-// button", mais acima, é uma regra legada (hoje sem nenhum uso real — era de
-// uma versão antiga da tela) que ainda bateria nesse botão com especificidade
-// maior que uma classe só, então essas regras repetem o mesmo escopo
-// ".actions button" pra garantir que ganham e o botão fica idêntico às
-// outras chips.
-.actions button.action-chip {
-  font: inherit;
+  font-size: 0.85rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
   cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 0.3rem 0.65rem;
-  border-radius: 62.4375rem;
-  border: 0.0625rem solid #cbd5e1;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 0.76rem;
-  font-weight: 600;
 }
 
-.actions button.action-chip--danger {
-  border-color: rgba(220, 38, 38, 0.3);
-  background: rgba(220, 38, 38, 0.08);
-  color: #dc2626;
+.btn-link-danger:hover {
+  text-decoration: underline;
 }
-
-.actions button.action-chip--danger:hover {
-  background: rgba(220, 38, 38, 0.16);
-  border-color: #dc2626;
-  color: #b91c1c;
-}
-
 
 .self-note {
   color: #94a3b8;
   font-size: 0.85rem;
   font-style: italic;
+  margin-left: 0.4rem;
 }
 
 .error {

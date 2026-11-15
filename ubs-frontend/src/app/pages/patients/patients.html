@@ -33,6 +33,9 @@
     <thead>
       <tr>
         <th>Nome</th>
+        <th>ACS</th>
+        <th>Médico(a)</th>
+        <th>Enfermeiro(a)</th>
         <th>Prioridade</th>
         <th>Alerta</th>
         <th>Próxima visita</th>
@@ -44,6 +47,9 @@
       @for (patient of pagedPatients(); track patient.id) {
       <tr>
         <td data-label="Nome" class="cell-title">{{ patient.name }}</td>
+        <td data-label="ACS">{{ professionalName(patient.communityHealthWorkerId) || '-' }}</td>
+        <td data-label="Médico(a)">{{ professionalName(patient.doctorId) || '-' }}</td>
+        <td data-label="Enfermeiro(a)">{{ professionalName(patient.nurseId) || '-' }}</td>
         <td data-label="Prioridade"><span class="badge badge--{{ patient.priority }}">{{ priorityLabel(patient.priority) }}</span></td>
         <td data-label="Alerta">
           @if (patient.alertLevel) {
@@ -65,7 +71,7 @@
       </tr>
       } @empty {
       <tr>
-        <td colspan="6">
+        <td colspan="9">
           @if (patients().length === 0) {
           Nenhum paciente cadastrado ainda.
           } @else {

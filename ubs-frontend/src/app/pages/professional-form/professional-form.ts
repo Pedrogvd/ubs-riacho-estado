@@ -27,6 +27,7 @@ export class ProfessionalForm implements OnInit {
 
   resetPasswordResult = signal<string | null>(null);
   resetPasswordError = signal('');
+  accountActionError = signal('');
 
   // admin editando o próprio perfil não pode mexer no próprio role/status
   isSelf = computed(() => this.professional()?.id === this.authService.getProfessionalId());
@@ -41,8 +42,8 @@ export class ProfessionalForm implements OnInit {
     this.form = this.fb.nonNullable.group({
       name: ['', Validators.required],
       cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
-      address: ['', Validators.required],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+      address: [''],
+      phoneNumber: ['', Validators.pattern(/^\d{10,11}$/)],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
@@ -66,13 +67,43 @@ export class ProfessionalForm implements OnInit {
     return role === 'admin' ? 'Admin' : 'Profissional';
   }
 
+  specialtyLabel(specialty: HealthProfessional['specialty']): string {
+    switch (specialty) {
+      case 'chw': return 'ACS';
+      case 'doctor': return 'Médico(a)';
+      case 'nurse': return 'Enfermeiro(a)';
+      default: return 'Não definida';
+    }
+  }
+
+  onSpecialtyChange(event: Event): void {
+    if (!this.professionalId) return;
+    const value = (event.target as HTMLSelectElement).value as HealthProfessional['specialty'];
+
+    this.accountActionError.set('');
+    this.healthProfessionalsService.update(this.professionalId, { specialty: value }).subscribe({
+      next: () => this.loadProfessional(this.professionalId!),
+      // se der erro, recarrega o valor real do servidor — senão o <select>
+      // fica mostrando a opção que a pessoa clicou, mesmo sem ter sido salva
+      error: () => {
+        this.accountActionError.set('Não foi possível salvar a função clínica. Tente novamente.');
+        this.loadProfessional(this.professionalId!);
+      },
+    });
+  }
+
   toggleRole(): void {
     const current = this.professional();
     if (!current || !this.professionalId) return;
 
     const newRole = current.role === 'admin' ? 'professional' : 'admin';
-    this.healthProfessionalsService.update(this.professionalId, { role: newRole }).subscribe(() => {
-      this.loadProfessional(this.professionalId!);
+    this.accountActionError.set('');
+    this.healthProfessionalsService.update(this.professionalId, { role: newRole }).subscribe({
+      next: () => this.loadProfessional(this.professionalId!),
+      error: () => {
+        this.accountActionError.set('Não foi possível salvar o perfil de acesso. Tente novamente.');
+        this.loadProfessional(this.professionalId!);
+      },
     });
   }
 
@@ -80,8 +111,13 @@ export class ProfessionalForm implements OnInit {
     const current = this.professional();
     if (!current || !this.professionalId) return;
 
-    this.healthProfessionalsService.update(this.professionalId, { active: !current.active }).subscribe(() => {
-      this.loadProfessional(this.professionalId!);
+    this.accountActionError.set('');
+    this.healthProfessionalsService.update(this.professionalId, { active: !current.active }).subscribe({
+      next: () => this.loadProfessional(this.professionalId!),
+      error: () => {
+        this.accountActionError.set('Não foi possível salvar o status da conta. Tente novamente.');
+        this.loadProfessional(this.professionalId!);
+      },
     });
   }
 
@@ -188,11 +224,15 @@ export class ProfessionalForm implements OnInit {
   private loadProfessional(id: string): void {
     this.healthProfessionalsService.getById(id).subscribe((professional) => {
       this.professional.set(professional);
+      // alguns cadastros antigos foram salvos com CPF/telefone já formatados
+      // (com pontos, traço, parênteses); tira a formatação ao carregar, senão
+      // o validador (que só aceita dígitos) marca o campo como inválido sem
+      // o usuário ter mexido em nada
       this.form.patchValue({
         name: professional.name,
-        cpf: professional.cpf,
+        cpf: professional.cpf.replace(/\D/g, ''),
         address: professional.address,
-        phoneNumber: professional.phoneNumber,
+        phoneNumber: professional.phoneNumber.replace(/\D/g, ''),
         email: professional.email,
       });
     });

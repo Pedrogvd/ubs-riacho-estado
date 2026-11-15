@@ -5,6 +5,7 @@
   <div class="tabs">
     <button type="button" [class.active]="activeTab() === 'patients'" (click)="setTab('patients')">Pacientes</button>
     <button type="button" [class.active]="activeTab() === 'professionals'" (click)="setTab('professionals')">Profissionais</button>
+    <button type="button" [class.active]="activeTab() === 'conditions'" (click)="setTab('conditions')">Condições</button>
   </div>
 
   @if (activeTab() === 'patients') {
@@ -20,6 +21,9 @@
         <tr>
           <th>Nome</th>
           <th>CPF</th>
+          <th>ACS</th>
+          <th>Médico(a)</th>
+          <th>Enfermeiro(a)</th>
           <th>Prioridade</th>
           <th>Status</th>
           <th>Ações</th>
@@ -30,6 +34,9 @@
         <tr>
           <td data-label="Nome" class="cell-title">{{ patient.name }}</td>
           <td data-label="CPF">{{ patient.cpf }}</td>
+          <td data-label="ACS">{{ professionalName(patient.communityHealthWorkerId) || '-' }}</td>
+          <td data-label="Médico(a)">{{ professionalName(patient.doctorId) || '-' }}</td>
+          <td data-label="Enfermeiro(a)">{{ professionalName(patient.nurseId) || '-' }}</td>
           <td data-label="Prioridade"><span class="badge badge--{{ patient.priority }}">{{ priorityLabel(patient.priority) }}</span></td>
           <td data-label="Status">
             <span class="badge" [class.badge--active]="patient.active" [class.badge--inactive]="!patient.active">
@@ -37,19 +44,27 @@
             </span>
           </td>
           <td data-label="Ações" class="actions">
-            <a [routerLink]="['/patients/edit', patient.id]" class="btn-link action-chip">Editar dados do paciente</a>
-            <div class="action-grid">
-              <a [routerLink]="['/visits/new', patient.id]" class="btn-link action-chip action-chip--visit">Registrar visita</a>
-              <a [routerLink]="['/visits/history', patient.id]" class="btn-link action-chip action-chip--visit">Histórico de visitas</a>
-              <a [routerLink]="['/ivcf/new', patient.id]" class="btn-link action-chip action-chip--primary">Editar IVCF-20</a>
-              <a [routerLink]="['/ivcf/history', patient.id]" class="btn-link action-chip action-chip--primary">Histórico IVCF</a>
+            <button type="button" class="actions-trigger" (click)="toggleActionsMenu(patient.id, $event)">
+              Ações
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            @if (openActionsFor() === patient.id) {
+            <div class="actions-menu" [style.top.px]="actionsMenuPosition().top" [style.left.px]="actionsMenuPosition().left" (click)="$event.stopPropagation()">
+              <a [routerLink]="['/patients/edit', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Editar dados do paciente</a>
+              <a [routerLink]="['/visits/new', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Registrar visita</a>
+              <a [routerLink]="['/visits/history', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Histórico de visitas</a>
+              <a [routerLink]="['/ivcf/new', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Editar IVCF-20</a>
+              <a [routerLink]="['/ivcf/history', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Histórico IVCF</a>
+              <button type="button" class="actions-menu__item actions-menu__item--danger" (click)="closeActionsMenu(); askDeletePatient(patient)">Excluir paciente</button>
             </div>
-            <button type="button" class="btn-link action-chip action-chip--danger" (click)="askDeletePatient(patient)">Excluir paciente</button>
+            }
           </td>
         </tr>
         } @empty {
         <tr>
-          <td colspan="5">Nenhum paciente encontrado.</td>
+          <td colspan="8">Nenhum paciente encontrado.</td>
         </tr>
         }
       </tbody>
@@ -74,6 +89,7 @@
         <tr>
           <th>Nome</th>
           <th>Email</th>
+          <th>Função</th>
           <th>Perfil</th>
           <th>Status</th>
           <th>Ações</th>
@@ -84,6 +100,7 @@
         <tr>
           <td data-label="Nome" class="cell-title">{{ professional.name }}</td>
           <td data-label="Email">{{ professional.email }}</td>
+          <td data-label="Função">{{ specialtyLabel(professional.specialty) }}</td>
           <td data-label="Perfil"><span class="badge badge--{{ professional.role }}">{{ roleLabel(professional.role) }}</span></td>
           <td data-label="Status">
             <span class="badge" [class.badge--active]="professional.active" [class.badge--inactive]="!professional.active">
@@ -111,6 +128,49 @@
     }
   }
 
+  @if (activeTab() === 'conditions') {
+    <p class="subtitle">
+      Condições personalizadas cadastradas via "Outro" no formulário de paciente.
+    </p>
+
+    <div class="filters">
+      <input type="text" placeholder="Buscar por nome..." [value]="conditionSearch()" (input)="onConditionSearchChange($event)" class="filter-input" />
+    </div>
+
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Criado por</th>
+          <th>Criado em</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (condition of pagedConditions(); track condition.id) {
+        <tr>
+          <td data-label="Nome" class="cell-title">{{ condition.label }}</td>
+          <td data-label="Criado por">{{ professionalName(condition.createdBy) || '-' }}</td>
+          <td data-label="Criado em">{{ condition.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td data-label="Ações" class="actions">
+            <button type="button" class="btn-link-danger" (click)="askDeleteCondition(condition)">Excluir</button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="4">Nenhuma condição personalizada cadastrada ainda.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    </div>
+
+    @if (filteredConditions().length > 0) {
+    <app-pagination [currentPage]="conditionsPage()" [totalPages]="conditionsTotalPages()" (pageChange)="conditionsPage.set($event)" />
+    }
+  }
+
   @if (patientToDelete(); as patient) {
     <div class="modal-overlay" (click)="cancelDeletePatient()">
       <div class="modal-box" (click)="$event.stopPropagation()">
@@ -128,6 +188,29 @@
           <button type="button" class="btn-cancel" [disabled]="deletingPatient()" (click)="cancelDeletePatient()">Cancelar</button>
           <button type="button" class="btn-danger-solid" [disabled]="deletingPatient()" (click)="confirmDeletePatient()">
             {{ deletingPatient() ? 'Excluindo...' : 'Excluir paciente' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (conditionToDelete(); as condition) {
+    <div class="modal-overlay" (click)="cancelDeleteCondition()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h2>Excluir condição</h2>
+        <p>
+          Excluir a condição <strong>"{{ condition.label }}"</strong>? Ela deixa de aparecer como opção pra todos os
+          profissionais. Essa ação não pode ser desfeita.
+        </p>
+
+        @if (conditionDeleteError()) {
+          <p class="error">{{ conditionDeleteError() }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" [disabled]="deletingCondition()" (click)="cancelDeleteCondition()">Cancelar</button>
+          <button type="button" class="btn-danger-solid" [disabled]="deletingCondition()" (click)="confirmDeleteCondition()">
+            {{ deletingCondition() ? 'Excluindo...' : 'Excluir condição' }}
           </button>
         </div>
       </div>

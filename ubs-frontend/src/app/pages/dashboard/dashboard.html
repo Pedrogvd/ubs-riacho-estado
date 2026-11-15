@@ -70,7 +70,7 @@
     @if (isAdmin()) {
       <section class="report-section">
         <h3>Ranking de visitas por ACS</h3>
-        @if (data.acsRanking.length > 0) {
+        @if (data.communityHealthWorkerRanking.length > 0) {
           <table>
             <thead>
               <tr>
@@ -80,7 +80,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (item of data.acsRanking; track item.professionalId; let i = $index) {
+              @for (item of data.communityHealthWorkerRanking; track item.professionalId; let i = $index) {
               <tr>
                 <td data-label="#">{{ i + 1 }}º</td>
                 <td data-label="ACS" class="cell-title">{{ item.professionalName }}</td>

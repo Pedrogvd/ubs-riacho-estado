@@ -17,10 +17,12 @@ export interface Patient {
   createdAt: string;
   lastVisitAt: string | null;
   nextVisitDue: string | null;
-  alertLevel?: "critical" | "overdue" | "upcoming" | "ok";
+  alertLevel?: "critical" | "overdue" | "upcoming" | "ok" | "";
   cns: string;
   microarea: string;
-  acsResponsavelId: string;
+  communityHealthWorkerId: string;
+  doctorId: string;
+  nurseId: string;
 }
 
 export interface CreatePatientInput {
@@ -34,7 +36,12 @@ export interface CreatePatientInput {
   visitPeriodicityDays: number;
   cns: string;
   microarea: string;
-  acsResponsavelId: string;
+  communityHealthWorkerId: string;
+  doctorId: string;
+  nurseId: string;
+  // true pra confirmar que é uma pessoa diferente e seguir mesmo depois de
+  // receber o aviso de possível duplicado por nome + data de nascimento
+  forceCreate?: boolean;
 }
 
 export interface UpdatePatientInput {
@@ -48,7 +55,9 @@ export interface UpdatePatientInput {
   visitPeriodicityDays?: number;
   cns?: string;
   microarea?: string;
-  acsResponsavelId?: string;
+  communityHealthWorkerId?: string;
+  doctorId?: string;
+  nurseId?: string;
   active?: boolean;
 }
 

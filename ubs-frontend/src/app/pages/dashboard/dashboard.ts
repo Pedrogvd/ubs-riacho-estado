@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { Dashboard as DashboardService, DashboardSummary } from '../../services/dashboard';
 import { Auth as AuthService } from '../../services/auth';
 import { Reports as ReportsService, MonthlyReport } from '../../services/reports';
+import { Conditions as ConditionsService } from '../../services/conditions';
 import { CONDITION_OPTIONS } from '../patient-form/patient-form';
 
 const MONTH_LABELS = [
@@ -29,11 +30,16 @@ export class Dashboard implements OnInit {
   });
 
   private conditionLabels = new Map(CONDITION_OPTIONS.map((option) => [option.value, option.label]));
+  // condições personalizadas ("Outro") resolvidas por id -> label, carregado
+  // à parte porque essa lista é dinâmica (cadastrada pelos profissionais),
+  // diferente de CONDITION_OPTIONS que é fixa
+  private customConditionLabels = new Map<string, string>();
 
   constructor(
     private dashboardService: DashboardService,
     private authService: AuthService,
-    private reportsService: ReportsService
+    private reportsService: ReportsService,
+    private conditionsService: ConditionsService
   ) {}
 
   ngOnInit(): void {
@@ -42,6 +48,10 @@ export class Dashboard implements OnInit {
     });
 
     this.professionalName.set(this.authService.getName());
+
+    this.conditionsService.list().subscribe((data) => {
+      this.customConditionLabels = new Map(data.map((condition) => [condition.id, condition.label]));
+    });
 
     this.loadReport();
   }
@@ -68,7 +78,7 @@ export class Dashboard implements OnInit {
   }
 
   conditionLabel(condition: string): string {
-    return this.conditionLabels.get(condition) ?? condition;
+    return this.conditionLabels.get(condition) ?? this.customConditionLabels.get(condition) ?? condition;
   }
 
   private loadReport(): void {

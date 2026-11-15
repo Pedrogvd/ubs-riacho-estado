@@ -40,7 +40,7 @@
 
     <section class="report-section">
       <h2>Ranking de visitas por ACS</h2>
-      @if (data.acsRanking.length > 0) {
+      @if (data.communityHealthWorkerRanking.length > 0) {
         <table>
           <thead>
             <tr>
@@ -50,7 +50,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of data.acsRanking; track item.professionalId; let i = $index) {
+            @for (item of data.communityHealthWorkerRanking; track item.professionalId; let i = $index) {
             <tr>
               <td>{{ i + 1 }}º</td>
               <td>{{ item.professionalName }}</td>

@@ -8,3 +8,4 @@ export * from "./DTOS/CreateHealthProfessionalInput";
 export * from "./DTOS/CreateVisitInput";
 export * from "./IvcfAssessment";
 export * from "./DTOS/CreateIvcfAssessmentInput";
+export * from "./Condition";

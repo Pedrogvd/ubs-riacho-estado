@@ -14,10 +14,15 @@ export interface Patient {
     nextVisitDue: string | null;
     cns: string;
     microarea: string;
-    acsResponsavelId: string;
+    // time de responsaveis do paciente: cada um e opcional e no maximo um por
+    // funcao (ex.: um so medico). Visibilidade pra profissional comum agora
+    // depende de estar em QUALQUER um desses tres, nao so do ACS.
+    communityHealthWorkerId: string;
+    doctorId: string;
+    nurseId: string;
 }
 
-export type AlertLevel = "critical" | "overdue" | "upcoming" | "ok";
+export type AlertLevel = "critical" | "overdue" | "upcoming" | "ok" | "";
 
 export interface PatientWithAlert extends Patient {
     alertLevel: AlertLevel;

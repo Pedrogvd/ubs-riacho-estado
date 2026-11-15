@@ -9,5 +9,7 @@ export interface CreatePatientInput {
     visitPeriodicityDays: number;
     cns: string;
     microarea: string;
-    acsResponsavelId: string;
+    communityHealthWorkerId: string;
+    doctorId: string;
+    nurseId: string;
 }

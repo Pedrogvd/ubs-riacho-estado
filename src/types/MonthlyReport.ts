@@ -6,7 +6,7 @@ export interface VisitOutcomeBreakdown {
     successRate: number;
 }
 
-export interface AcsRanking {
+export interface CommunityHealthWorkerRanking {
     professionalId: string;
     professionalName: string;
     visitsCount: number;
@@ -20,7 +20,7 @@ export interface ConditionBreakdown {
 export interface MonthlyReport {
     month: string;
     visitOutcomes: VisitOutcomeBreakdown;
-    acsRanking: AcsRanking[];
+    communityHealthWorkerRanking: CommunityHealthWorkerRanking[];
     conditionBreakdown: ConditionBreakdown[];
     newPatientsCount: number;
 }

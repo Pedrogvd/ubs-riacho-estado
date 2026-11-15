@@ -11,6 +11,7 @@ export interface HealthProfessional {
   phoneNumber: string;
   email: string;
   role: 'admin' | 'professional';
+  specialty: '' | 'chw' | 'doctor' | 'nurse';
   active: boolean;
   createdAt: string;
 }
@@ -26,6 +27,7 @@ export interface CreateHealthProfessionalInput {
 
 export interface UpdateHealthProfessionalInput {
   role?: 'admin' | 'professional';
+  specialty?: '' | 'chw' | 'doctor' | 'nurse';
   active?: boolean;
   name?: string;
   cpf?: string;

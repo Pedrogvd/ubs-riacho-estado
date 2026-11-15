@@ -12,6 +12,7 @@ dist/
 # Scripts de seed (contêm dados reais de pessoas — nome, CPF — nunca commitar)
 seed*.js
 seed*.ts
+scripts/
 
 # Logs
 npm-debug.log*
@@ -20,3 +21,4 @@ npm-debug.log*
 # Sistema
 .DS_Store
 Thumbs.db
+logs/

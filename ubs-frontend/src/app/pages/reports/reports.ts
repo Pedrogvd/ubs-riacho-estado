@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { Reports as ReportsService, MonthlyReport } from '../../services/reports';
+import { Conditions as ConditionsService } from '../../services/conditions';
 import { CONDITION_OPTIONS } from '../patient-form/patient-form';
 
 const MONTH_LABELS = [
@@ -24,10 +25,19 @@ export class Reports implements OnInit {
   });
 
   private conditionLabels = new Map(CONDITION_OPTIONS.map((option) => [option.value, option.label]));
+  // condições personalizadas ("Outro"), carregado à parte por ser dinâmico
+  private customConditionLabels = new Map<string, string>();
 
-  constructor(private reportsService: ReportsService) {}
+  constructor(
+    private reportsService: ReportsService,
+    private conditionsService: ConditionsService
+  ) {}
 
   ngOnInit(): void {
+    this.conditionsService.list().subscribe((data) => {
+      this.customConditionLabels = new Map(data.map((condition) => [condition.id, condition.label]));
+    });
+
     this.loadReport();
   }
 
@@ -49,7 +59,7 @@ export class Reports implements OnInit {
   }
 
   conditionLabel(condition: string): string {
-    return this.conditionLabels.get(condition) ?? condition;
+    return this.conditionLabels.get(condition) ?? this.customConditionLabels.get(condition) ?? condition;
   }
 
   private loadReport(): void {

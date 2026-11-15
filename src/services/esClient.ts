@@ -16,7 +16,9 @@ export const INDICES = {
     patients: "patients",
     visits: "visits",
     healthProfessionals: "health_professionals",
-    ivcfAssessments: "ivcf_assessments"
+    ivcfAssessments: "ivcf_assessments",
+    patientTeamLog: "patient_team_log",
+    customConditions: "custom_conditions"
 }
 
 
@@ -34,12 +36,16 @@ export const INDICES = {
 // only ever talk to our Express API — never directly to Elasticsearch —
 // so index creation stays controlled by code like this.
 
-async function ensureIndex(index: string, mappings: Record<string, unknown>) {// "Record means some generic object with text keys, but I won't specify exactly which fields it has."
+// retorna true quando o indice acabou de ser criado agora (util pra saber
+// se precisa rodar alguma seed depois, tipo nas condicoes padrao)
+async function ensureIndex(index: string, mappings: Record<string, unknown>): Promise<boolean> {// "Record means some generic object with text keys, but I won't specify exactly which fields it has."
     const exists = await esClient.indices.exists({ index });
     if (!exists.body) {
         await esClient.indices.create({ index, body: { mappings } })
         console.log(`Index "${index}" created`);
+        return true;
     }
+    return false;
 }
 
 export async function ensureIndices(): Promise<void> { // A Promise represents a value that doesn't exist yet, but will exist in the future - it ensures that we will receive some answer (bad or good)
@@ -83,6 +89,33 @@ export async function ensureIndices(): Promise<void> { // A Promise represents a
             assessedAt: { type: "date" },
             totalScore: { type: "integer" },
             classification: { type: "keyword" },
+            createdAt: { type: "date" },
+        },
+    });
+
+    // historico de quem atribuiu/trocou o ACS, medico ou enfermeiro
+    // responsavel de um paciente — pra ter rastreabilidade, ja que agora
+    // qualquer profissional pode mudar isso (nao so admin)
+    await ensureIndex(INDICES.patientTeamLog, {
+        properties: {
+            patientId: { type: "keyword" },
+            field: { type: "keyword" },
+            previousProfessionalId: { type: "keyword" },
+            newProfessionalId: { type: "keyword" },
+            changedBy: { type: "keyword" },
+            changedAt: { type: "date" },
+        },
+    });
+
+    // "Outro" nas condicoes do paciente: em vez de cada profissional digitar
+    // um texto livre diferente pra mesma condicao, essa lista fica
+    // compartilhada e reutilizavel -- label como keyword (nao text) porque e
+    // so um nome curto, e assim da pra ordenar/comparar sem precisar de
+    // full-text search
+    await ensureIndex(INDICES.customConditions, {
+        properties: {
+            label: { type: "keyword" },
+            createdBy: { type: "keyword" },
             createdAt: { type: "date" },
         },
     });

@@ -19,7 +19,7 @@
     </label>
 
     <label>
-      <span class="field-label">Endereço <span class="required">*</span></span>
+      <span class="field-label">Endereço</span>
       <input type="text" formControlName="address" />
       @if (getError('address'); as error) {
       <span class="field-error">{{ error }}</span>
@@ -27,7 +27,7 @@
     </label>
 
     <label>
-      <span class="field-label">Telefone <span class="required">*</span></span>
+      <span class="field-label">Telefone</span>
       <input type="tel" inputmode="numeric" maxlength="16" formControlName="phoneNumber"
         (input)="formatPhone($event)" />
       @if (getError('phoneNumber'); as error) {
@@ -57,6 +57,10 @@
     <div class="account-panel">
       <p class="account-panel__title">Acesso ao sistema</p>
 
+      @if (accountActionError()) {
+      <p class="error">{{ accountActionError() }}</p>
+      }
+
       @if (isSelf()) {
       <div class="account-panel__row">
         <span class="field-label">Perfil</span>
@@ -68,7 +72,11 @@
           {{ prof.active ? 'Ativo' : 'Inativo' }}
         </span>
       </div>
-      <p class="self-note">Você não pode alterar seu próprio perfil ou status.</p>
+      <div class="account-panel__row">
+        <span class="field-label">Função clínica</span>
+        <span class="badge">{{ specialtyLabel(prof.specialty) }}</span>
+      </div>
+      <p class="self-note">Você não pode alterar seu próprio perfil, função ou status.</p>
       } @else {
       <div class="toggle-row">
         <div class="toggle-row__text">
@@ -89,6 +97,19 @@
           <input type="checkbox" [checked]="prof.active" (change)="toggleActive()" />
           <span class="switch__track"></span>
         </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-row__text">
+          <span class="toggle-row__label">Função clínica</span>
+          <span class="toggle-row__hint">Usada pra saber quem pode ser médico, ACS ou enfermeiro(a) responsável de um paciente</span>
+        </div>
+        <select class="specialty-select" [value]="prof.specialty" (change)="onSpecialtyChange($event)">
+          <option value="">Não definida</option>
+          <option value="chw">ACS</option>
+          <option value="doctor">Médico(a)</option>
+          <option value="nurse">Enfermeiro(a)</option>
+        </select>
       </div>
 
       <div class="reset-password-row">
@@ -113,6 +134,6 @@
     </div>
     }
 
-    <button type="submit" [disabled]="form.invalid">{{ isEditMode() ? 'Salvar alterações' : 'Salvar profissional' }}</button>
+    <button type="submit">{{ isEditMode() ? 'Salvar alterações' : 'Salvar profissional' }}</button>
   </form>
 </div>

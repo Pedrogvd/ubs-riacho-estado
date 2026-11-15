@@ -1,6 +1,22 @@
 <div class="form-page">
   <h1>{{ isEditMode() ? 'Editar paciente' : 'Novo paciente' }}</h1>
 
+  @if (saveError(); as saveErrorMsg) {
+  <p class="error">{{ saveErrorMsg }}</p>
+  }
+
+  @if (possibleDuplicateWarning(); as duplicateWarningMsg) {
+  <div class="warning">
+    <p>{{ duplicateWarningMsg }}</p>
+    <div class="warning-actions">
+      <button type="button" class="btn-secondary" (click)="cancelDuplicateWarning()">Cancelar</button>
+      <button type="button" class="btn-primary" [disabled]="saving()" (click)="confirmDuplicateAndSave()">
+        {{ saving() ? 'Salvando...' : 'Confirmar, é outra pessoa' }}
+      </button>
+    </div>
+  </div>
+  }
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <label>
       <span class="field-label">Nome <span class="required">*</span></span>
@@ -80,19 +96,36 @@
       <input type="text" formControlName="microarea" />
     </label>
 
-    @if (isAdmin()) {
     <label>
       <span class="field-label">ACS responsável</span>
-      <select formControlName="acsResponsavelId">
+      <select formControlName="communityHealthWorkerId">
         <option value="">Nenhum</option>
-        @for (professional of activeHealthProfessionals(); track professional.id) {
+        @for (professional of chwOptions(); track professional.id) {
         <option [value]="professional.id">{{ professional.name }}</option>
         }
       </select>
     </label>
-    } @else {
-    <p class="acs-note">{{ isEditMode() ? 'Você é o ACS responsável por este paciente.' : 'Este paciente ficará sob sua responsabilidade.' }}</p>
-    }
+
+    <label>
+      <span class="field-label">Médico(a) responsável</span>
+      <select formControlName="doctorId">
+        <option value="">Nenhum</option>
+        @for (professional of doctorOptions(); track professional.id) {
+        <option [value]="professional.id">{{ professional.name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span class="field-label">Enfermeiro(a) responsável</span>
+      <select formControlName="nurseId">
+        <option value="">Nenhum</option>
+        @for (professional of nurseOptions(); track professional.id) {
+        <option [value]="professional.id">{{ professional.name }}</option>
+        }
+      </select>
+    </label>
+
     <label>
       <span class="field-label">Prioridade</span>
       <select formControlName="priority">
@@ -105,12 +138,66 @@
 
     <fieldset class="conditions-fieldset">
       <legend>Condições</legend>
-      @for (condition of conditionOptions; track condition.value) {
-      <label class="checkbox-label">
-        <input type="checkbox" [value]="condition.value" [checked]="isConditionSelected(condition.value)"
-          (change)="toggleCondition(condition.value, $event)" />
-        {{ condition.label }}
-      </label>
+
+      <input
+        type="text"
+        class="condition-filter"
+        placeholder="Buscar condição..."
+        [value]="conditionFilter()"
+        (input)="onConditionFilterChange($event)"
+      />
+
+      <div class="conditions-picker">
+        <div class="conditions-picker__row conditions-picker__row--header">
+          <span class="conditions-picker__index">#</span>
+          <span>Condição</span>
+          <span class="conditions-picker__header-check">Marcar</span>
+          <span></span>
+        </div>
+        <div class="conditions-picker__body">
+          @for (row of filteredConditionRows(); track row.kind + row.value; let i = $index) {
+          <label class="conditions-picker__row">
+            <span class="conditions-picker__index">{{ i + 1 }}</span>
+            <span>{{ row.label }}</span>
+            <input class="conditions-picker__check" type="checkbox" [checked]="isRowSelected(row)" (change)="toggleRow(row, $event)" />
+            <span class="conditions-picker__action">
+              @if (isJustCreated(row)) {
+              <button
+                type="button"
+                class="conditions-picker__delete"
+                [disabled]="deletingConditionId() === row.value"
+                (click)="deleteJustCreatedCondition(row, $event)"
+                title="Excluir condição que você acabou de criar"
+              >×</button>
+              }
+            </span>
+          </label>
+          } @empty {
+          <p class="conditions-picker__empty">Nenhuma condição encontrada com esse filtro.</p>
+          }
+        </div>
+      </div>
+
+      @if (conditionDeleteError(); as conditionDeleteErrorMsg) {
+      <p class="error">{{ conditionDeleteErrorMsg }}</p>
+      }
+
+      <!-- "Outro": cadastra uma condição personalizada nova (ou reaproveita,
+           se já existir uma com esse nome) e já marca ela pra esse paciente
+           -- a tabela acima é só pra buscar entre as que já existem -->
+      <div class="custom-condition-input">
+        <input
+          type="text"
+          placeholder="Outro (cadastrar nova condição)"
+          [value]="customConditionInput()"
+          (input)="onCustomConditionInputChange($event)"
+          (keydown.enter)="$event.preventDefault(); addCustomCondition()"
+        />
+        <button type="button" (click)="addCustomCondition()">Adicionar</button>
+      </div>
+
+      @if (customConditionError(); as customConditionErrorMsg) {
+      <p class="error">{{ customConditionErrorMsg }}</p>
       }
     </fieldset>
 
@@ -129,6 +216,6 @@
     </label>
     }
 
-    <button type="submit" [disabled]="form.invalid">{{ isEditMode() ? 'Salvar alterações' : 'Salvar paciente' }}</button>
+    <button type="submit" [disabled]="saving()">{{ saving() ? 'Salvando...' : (isEditMode() ? 'Salvar alterações' : 'Salvar paciente') }}</button>
   </form>
 </div>

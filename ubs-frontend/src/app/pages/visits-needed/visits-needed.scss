@@ -89,13 +89,21 @@ h1 {
   background-color: #ffffff;
 }
 
+// o scroll (quando precisar) fica contido na tabela, nao na pagina inteira
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.05);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   background: #ffffff;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.05);
+  margin-bottom: 0;
 }
 
 thead {

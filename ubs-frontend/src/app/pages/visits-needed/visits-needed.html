@@ -18,8 +18,8 @@
     </div>
 
     @if (isAdmin()) {
-      <select [value]="acsFilter()" (change)="onAcsFilterChange($event)">
-        <option value="all">Todos os ACS</option>
+      <select [value]="professionalFilter()" (change)="onProfessionalFilterChange($event)">
+        <option value="all">Todos os profissionais</option>
         @for (professional of healthProfessionals(); track professional.id) {
           <option [value]="professional.id">{{ professional.name }}</option>
         }
@@ -27,12 +27,15 @@
     }
   </div>
 
+  <div class="table-scroll">
   <table>
     <thead>
       <tr>
         <th>Nome</th>
         <th>Prioridade</th>
-        <th>ACS responsável</th>
+        <th>ACS</th>
+        <th>Médico(a)</th>
+        <th>Enfermeiro(a)</th>
         <th>Cadastrado em</th>
         <th>Ações</th>
       </tr>
@@ -42,7 +45,9 @@
       <tr>
         <td data-label="Nome" class="cell-title">{{ patient.name }}</td>
         <td data-label="Prioridade"><span class="badge badge--{{ patient.priority }}">{{ priorityLabel(patient.priority) }}</span></td>
-        <td data-label="ACS responsável">{{ acsName(patient.acsResponsavelId) }}</td>
+        <td data-label="ACS">{{ professionalName(patient.communityHealthWorkerId) }}</td>
+        <td data-label="Médico(a)">{{ professionalName(patient.doctorId) }}</td>
+        <td data-label="Enfermeiro(a)">{{ professionalName(patient.nurseId) }}</td>
         <td data-label="Cadastrado em">{{ patient.createdAt | date:'dd/MM/yyyy' }}</td>
         <td data-label="Ações" class="actions">
           <a [routerLink]="['/visits/new', patient.id]" class="btn-link">Registrar visita</a>
@@ -50,7 +55,7 @@
       </tr>
       } @empty {
       <tr>
-        <td colspan="5">
+        <td colspan="7">
           @if (patientsNeedingVisit().length === 0) {
             Todo mundo já tem visita prevista na Agenda.
           } @else {
@@ -61,6 +66,7 @@
       }
     </tbody>
   </table>
+  </div>
 
   @if (filteredPatients().length > 0) {
     <app-pagination

@@ -1,12 +1,13 @@
 import { esClient, INDICES } from "./esClient";
 import { listVisits } from "./visitService";
+import { isOnPatientTeam } from "./patientService";
 import {
     Visit,
     Patient,
     HealthProfessional,
     MonthlyReport,
     VisitOutcomeBreakdown,
-    AcsRanking,
+    CommunityHealthWorkerRanking,
     ConditionBreakdown,
 } from "../types";
 
@@ -51,14 +52,14 @@ function buildVisitOutcomes(visits: Visit[]): VisitOutcomeBreakdown {
     return { completed, patient_absent, refused, total, successRate };
 }
 
-function buildAcsRanking(visits: Visit[], professionals: HealthProfessional[]): AcsRanking[] {
+function buildCommunityHealthWorkerRanking(visits: Visit[], professionals: HealthProfessional[]): CommunityHealthWorkerRanking[] {
     const countByProfessional = new Map<string, number>();
 
     for (const visit of visits) {
         countByProfessional.set(visit.professionalId, (countByProfessional.get(visit.professionalId) ?? 0) + 1);
     }
 
-    const ranking: AcsRanking[] = [];
+    const ranking: CommunityHealthWorkerRanking[] = [];
     for (const [professionalId, visitsCount] of countByProfessional) {
         const professional = professionals.find((p) => p.id === professionalId);
         ranking.push({
@@ -108,7 +109,7 @@ export async function getMonthlyReport(month: string, scopeToProfessionalId?: st
     const visitsInMonth = allVisits.filter((visit) => isInMonth(visit.visitDate, month));
 
     const scopedPatients = scopeToProfessionalId
-        ? patients.filter((p) => p.acsResponsavelId === scopeToProfessionalId)
+        ? patients.filter((p) => isOnPatientTeam(p, scopeToProfessionalId))
         : patients;
 
     const newPatientsCount = scopedPatients.filter((patient) => isInMonth(patient.createdAt, month)).length;
@@ -116,7 +117,7 @@ export async function getMonthlyReport(month: string, scopeToProfessionalId?: st
     return {
         month,
         visitOutcomes: buildVisitOutcomes(visitsInMonth),
-        acsRanking: buildAcsRanking(visitsInMonth, professionals),
+        communityHealthWorkerRanking: buildCommunityHealthWorkerRanking(visitsInMonth, professionals),
         conditionBreakdown: buildConditionBreakdown(visitsInMonth, scopedPatients),
         newPatientsCount,
     };

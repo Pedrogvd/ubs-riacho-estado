@@ -27,7 +27,7 @@ export class VisitsNeeded implements OnInit {
 
   searchTerm = signal('');
   alertFilter = signal<'all' | 'critical' | 'overdue' | 'upcoming'>('all');
-  acsFilter = signal<'all' | string>('all');
+  communityHealthWorkerFilter = signal<'all' | string>('all');
 
   patientsNeedingVisit = computed(() => {
     return this.allPatients()
@@ -45,12 +45,12 @@ export class VisitsNeeded implements OnInit {
   filteredPatients = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const alert = this.alertFilter();
-    const acs = this.acsFilter();
+    const acs = this.communityHealthWorkerFilter();
 
     return this.patientsNeedingVisit().filter((patient) => {
       if (search && !patient.name.toLowerCase().includes(search)) return false;
       if (alert !== 'all' && patient.alertLevel !== alert) return false;
-      if (acs !== 'all' && patient.acsResponsavelId !== acs) return false;
+      if (acs !== 'all' && patient.communityHealthWorkerId !== acs) return false;
       return true;
     });
   });
@@ -87,14 +87,14 @@ export class VisitsNeeded implements OnInit {
     this.currentPage.set(1);
   }
 
-  onAcsFilterChange(event: Event): void {
-    this.acsFilter.set((event.target as HTMLSelectElement).value);
+  onCommunityHealthWorkerFilterChange(event: Event): void {
+    this.communityHealthWorkerFilter.set((event.target as HTMLSelectElement).value);
     this.currentPage.set(1);
   }
 
-  acsName(acsResponsavelId: string): string {
-    if (!acsResponsavelId) return '-';
-    const professional = this.healthProfessionals().find((p) => p.id === acsResponsavelId);
+  communityHealthWorkerName(communityHealthWorkerId: string): string {
+    if (!communityHealthWorkerId) return '-';
+    const professional = this.healthProfessionals().find((p) => p.id === communityHealthWorkerId);
     return professional?.name ?? '-';
   }
 
