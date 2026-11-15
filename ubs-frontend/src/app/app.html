@@ -9,7 +9,7 @@
   @if (isLoggedIn()) {
   <nav class="app-nav" [class.app-nav--open]="mobileMenuOpen()" (click)="mobileMenuOpen.set(false)">
     <a routerLink="/visits-calendar" routerLinkActive="active">Agenda</a>
-    <a routerLink="/visits-needed" routerLinkActive="active">Quem precisa ser visitado</a>
+    <a routerLink="/visits-needed" routerLinkActive="active">Situação de visitas</a>
     @if (!isAdmin()) {
       <a routerLink="/patients" routerLinkActive="active">Meus pacientes</a>
     }

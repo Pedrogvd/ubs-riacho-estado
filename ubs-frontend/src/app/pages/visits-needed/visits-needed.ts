@@ -14,6 +14,21 @@ const PRIORITY_RANK: Record<string, number> = {
 
 const PAGE_SIZE = 5;
 
+// três jeitos de um paciente ativo estar em relação às visitas:
+// - "never": nunca foi visitado (sem nextVisitDue)
+// - "overdue": já passou da data calculada (última visita + periodicidade) —
+//   ou seja, não foi visitado dentro do prazo esperado
+// - "ok": tem próxima visita calculada e ela ainda está no futuro
+export type VisitStatus = 'never' | 'overdue' | 'ok';
+
+export interface PatientVisitStatus extends Patient {
+  visitStatus: VisitStatus;
+  // data usada pra ordenar e, quando fizer sentido, exibir: pra "never" é
+  // quando o paciente foi cadastrado; pra "overdue"/"ok" é a própria
+  // próxima visita calculada (nextVisitDue)
+  statusDate: string;
+}
+
 @Component({
   selector: 'app-visits-needed',
   imports: [RouterLink, DatePipe, Pagination],
@@ -29,25 +44,51 @@ export class VisitsNeeded implements OnInit {
   // filtra por qualquer um dos 3 papeis do time (ACS, medico ou enfermeiro),
   // nao so por ACS -- por isso o dropdown lista todos os profissionais
   professionalFilter = signal<'all' | string>('all');
+  // por padrão só mostra quem precisa de atenção (nunca visitado + atrasado)
+  // -- "em dia" e "todos" ficam só um clique de distância, mas não poluem
+  // a visão principal do dia a dia
+  statusFilter = signal<'needs-attention' | 'ok' | 'all'>('needs-attention');
 
-  patientsNeedingVisit = computed(() => {
+  patientsWithStatus = computed<PatientVisitStatus[]>(() => {
+    const now = new Date();
+
     return this.allPatients()
-      // sem nextVisitDue = nunca foi visitado e ainda não aparece em nenhum dia da Agenda
-      .filter((patient) => patient.active && !patient.nextVisitDue)
+      .filter((patient) => patient.active)
+      .map((patient) => {
+        let visitStatus: VisitStatus;
+        if (!patient.nextVisitDue) {
+          visitStatus = 'never';
+        } else if (new Date(patient.nextVisitDue) < now) {
+          visitStatus = 'overdue';
+        } else {
+          visitStatus = 'ok';
+        }
+
+        return {
+          ...patient,
+          visitStatus,
+          statusDate: patient.nextVisitDue ?? patient.createdAt,
+        };
+      })
       .sort((a, b) => {
         const priorityDiff = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
         if (priorityDiff !== 0) return priorityDiff;
 
-        // entre pacientes de mesma prioridade, quem está esperando há mais tempo vai primeiro
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        // dentro da mesma prioridade, os casos mais antigos (esperando há
+        // mais tempo, ou atrasados há mais tempo) vêm primeiro
+        return new Date(a.statusDate).getTime() - new Date(b.statusDate).getTime();
       });
   });
 
   filteredPatients = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const professionalId = this.professionalFilter();
+    const status = this.statusFilter();
 
-    return this.patientsNeedingVisit().filter((patient) => {
+    return this.patientsWithStatus().filter((patient) => {
+      if (status === 'needs-attention' && patient.visitStatus === 'ok') return false;
+      if (status === 'ok' && patient.visitStatus !== 'ok') return false;
+
       if (search && !patient.name.toLowerCase().includes(search)) return false;
       if (
         professionalId !== 'all' &&
@@ -95,6 +136,11 @@ export class VisitsNeeded implements OnInit {
 
   onProfessionalFilterChange(event: Event): void {
     this.professionalFilter.set((event.target as HTMLSelectElement).value);
+    this.currentPage.set(1);
+  }
+
+  onStatusFilterChange(event: Event): void {
+    this.statusFilter.set((event.target as HTMLSelectElement).value as 'needs-attention' | 'ok' | 'all');
     this.currentPage.set(1);
   }
 

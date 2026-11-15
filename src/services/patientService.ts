@@ -175,16 +175,21 @@ export async function updatePatient(
     return getPatient(id);
 }
 
-export async function updatePatientAfterVisit(patientId: string, visitDate: string): Promise<void> {
+// nextVisitDue agora é digitado manualmente por quem registra a visita (não
+// é mais calculado a partir da periodicidade) -- a equipe decidiu que a
+// data calculada automaticamente não refletia bem a realidade do
+// acompanhamento, e preferiu decidir a próxima data caso a caso.
+//
+// só atualiza lastVisitAt/nextVisitDue se essa visita for a mais RECENTE
+// (por data da visita, não por ordem de registro) -- sem isso, registrar
+// uma visita atrasada (de uma data mais antiga) depois de uma visita mais
+// nova já registrada faria "última visita" voltar pro passado por engano
+export async function updatePatientAfterVisit(patientId: string, visitDate: string, nextVisitDue: string): Promise<void> {
     const patient = await getPatient(patientId)
     if (!patient) throw new Error(`Patient ${patientId} not found`);
 
-    // salva-guarda: se por algum motivo o paciente estiver com periodicidade
-    // zerada/nula (bug antigo, ou dado legado), cai pro padrão de 30 dias em
-    // vez de gerar uma "próxima visita" igual à data da visita que acabou de
-    // ser registrada
-    const periodicityDays = patient.visitPeriodicityDays || 30;
-    const nextVisitDue = addDays(visitDate, periodicityDays);
+    const isMostRecentVisit = !patient.lastVisitAt || new Date(visitDate) >= new Date(patient.lastVisitAt);
+    if (!isMostRecentVisit) return;
 
     await esClient.update({
         index: INDICES.patients,

@@ -25,6 +25,14 @@
 
     @if (form.get('outcome')?.value === 'completed') {
       <label>
+        <span class="field-label">Próxima visita prevista <span class="required">*</span></span>
+        <input type="date" formControlName="nextVisitDue" />
+        @if (nextVisitDueError(); as error) {
+          <span class="field-error">{{ error }}</span>
+        }
+      </label>
+
+      <label>
         <span class="field-label">Pressão arterial</span>
         <input type="text" placeholder="ex: 120/80" formControlName="bloodPressure" />
       </label>

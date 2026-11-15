@@ -11,6 +11,7 @@ export async function createVisit (input: CreateVisitInput, professionalId: stri
         patientId: input.patientId,
         professionalId,
         visitDate: input.visitDate,
+        nextVisitDue: input.nextVisitDue,
         outcome: input.outcome,
         bloodPressure: input.bloodPressure,
         weightKg: input.weightKg,
@@ -30,7 +31,7 @@ export async function createVisit (input: CreateVisitInput, professionalId: stri
     // só conta como "visitado" se o paciente foi realmente encontrado/atendido;
     // ausência ou recusa não deve resetar o alerta de atraso dele
     if (visit.outcome === "completed") {
-        await updatePatientAfterVisit(visit.patientId, visit.visitDate);
+        await updatePatientAfterVisit(visit.patientId, visit.visitDate, visit.nextVisitDue);
     }
 
     return visit;

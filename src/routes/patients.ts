@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createPatient, listPatients, getPatient, updatePatient, deletePatient, VALID_CONDITIONS, addDays, isOnPatientTeam, normalizeName } from "../services/patientService";
+import { createPatient, listPatients, getPatient, updatePatient, deletePatient, VALID_CONDITIONS, isOnPatientTeam, normalizeName } from "../services/patientService";
 import { deleteVisitsByPatient } from "../services/visitService";
 import { deleteIvcfAssessmentsByPatient } from "../services/ivcfAssessmentService";
 import { recordTeamChanges } from "../services/patientTeamLogService";
@@ -59,8 +59,11 @@ patientsRouter.post("/", async (req, res) => {
                 (p) => p.active && ((cpf && p.cpf === cpf) || (cns && p.cns === cns))
             );
             if (duplicate) {
+                const isCpfMatch = duplicate.cpf === cpf && !!cpf;
+                const documentLabel = isCpfMatch ? "CPF" : "CNS";
+                const documentValue = isCpfMatch ? duplicate.cpf : duplicate.cns;
                 return res.status(409).json({
-                    error: `Já existe um paciente ativo cadastrado com esse ${duplicate.cpf === cpf && cpf ? "CPF" : "CNS"}: ${duplicate.name}`,
+                    error: `Já existe um paciente ativo cadastrado com esse ${documentLabel} (${documentValue}): ${duplicate.name}`,
                 });
             }
         }
@@ -221,10 +224,11 @@ patientsRouter.patch("/:id", async (req, res) => {
             return res.status(400).json({ error: "active must be a boolean" });
         }
 
-        // periodicidade vazia/zerada vira 30 dias (mesmo padrão do cadastro). Se a
-        // periodicidade mudou e o paciente já teve alguma visita, recalcula a
-        // "próxima visita" a partir da última visita registrada — sem isso, editar
-        // só a periodicidade não corrige uma "próxima visita" já salva errada
+        // periodicidade vazia/zerada vira 30 dias (mesmo padrão do cadastro).
+        // "Próxima visita prevista" agora é digitada manualmente por quem
+        // registra a visita (ver POST /visits), não é mais calculada a partir
+        // da periodicidade -- por isso editar a periodicidade aqui não mexe
+        // mais em nextVisitDue.
         const resolvedVisitPeriodicityDays = visitPeriodicityDays === undefined
             ? undefined
             : (visitPeriodicityDays || 30);
@@ -234,10 +238,6 @@ patientsRouter.patch("/:id", async (req, res) => {
             priority,
             conditions, visitPeriodicityDays: resolvedVisitPeriodicityDays, cns, microarea, active,
         };
-
-        if (resolvedVisitPeriodicityDays !== undefined && existing.lastVisitAt) {
-            updates.nextVisitDue = addDays(existing.lastVisitAt, resolvedVisitPeriodicityDays);
-        }
 
         // qualquer profissional do time (ou admin) pode reatribuir o ACS, o
         // medico ou o enfermeiro responsaveis — fica tudo registrado no log

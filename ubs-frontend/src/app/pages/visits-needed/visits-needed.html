@@ -1,6 +1,6 @@
 <div class="visits-needed-page">
-  <h1>Quem precisa ser visitado</h1>
-  <p class="subtitle">Pacientes ativos que nunca foram visitados e ainda não têm visita prevista na Agenda.</p>
+  <h1>Situação de visitas</h1>
+  <p class="subtitle">Acompanhamento de visitas dos pacientes ativos: quem nunca foi visitado, quem está atrasado e quem está em dia.</p>
 
   <div class="filters">
     <div class="filter-search">
@@ -16,6 +16,12 @@
         class="filter-input"
       />
     </div>
+
+    <select [value]="statusFilter()" (change)="onStatusFilterChange($event)">
+      <option value="needs-attention">Atrasados e sem visita</option>
+      <option value="ok">Em dia</option>
+      <option value="all">Todos</option>
+    </select>
 
     @if (isAdmin()) {
       <select [value]="professionalFilter()" (change)="onProfessionalFilterChange($event)">
@@ -36,7 +42,9 @@
         <th>ACS</th>
         <th>Médico(a)</th>
         <th>Enfermeiro(a)</th>
-        <th>Cadastrado em</th>
+        <th>Última visita</th>
+        <th>Próxima prevista</th>
+        <th>Situação</th>
         <th>Ações</th>
       </tr>
     </thead>
@@ -48,16 +56,30 @@
         <td data-label="ACS">{{ professionalName(patient.communityHealthWorkerId) }}</td>
         <td data-label="Médico(a)">{{ professionalName(patient.doctorId) }}</td>
         <td data-label="Enfermeiro(a)">{{ professionalName(patient.nurseId) }}</td>
-        <td data-label="Cadastrado em">{{ patient.createdAt | date:'dd/MM/yyyy' }}</td>
+        <td data-label="Última visita">{{ patient.lastVisitAt ? (patient.lastVisitAt | date:'dd/MM/yyyy') : '-' }}</td>
+        <td data-label="Próxima prevista">{{ patient.nextVisitDue ? (patient.nextVisitDue | date:'dd/MM/yyyy') : '-' }}</td>
+        <td data-label="Situação">
+          @switch (patient.visitStatus) {
+            @case ('never') {
+              <span class="visit-status visit-status--never">Nunca visitado</span>
+            }
+            @case ('overdue') {
+              <span class="visit-status visit-status--overdue">Atrasado</span>
+            }
+            @default {
+              <span class="visit-status visit-status--ok">Em dia</span>
+            }
+          }
+        </td>
         <td data-label="Ações" class="actions">
           <a [routerLink]="['/visits/new', patient.id]" class="btn-link">Registrar visita</a>
         </td>
       </tr>
       } @empty {
       <tr>
-        <td colspan="7">
-          @if (patientsNeedingVisit().length === 0) {
-            Todo mundo já tem visita prevista na Agenda.
+        <td colspan="9">
+          @if (patientsWithStatus().length === 0) {
+            Nenhum paciente ativo cadastrado ainda.
           } @else {
             Nenhum paciente encontrado com esses filtros.
           }

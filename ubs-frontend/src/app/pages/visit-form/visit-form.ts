@@ -13,6 +13,21 @@ function notFutureDateValidator(control: AbstractControl): ValidationErrors | nu
   return inputDate > new Date() ? { futureDate: true } : null;
 }
 
+// a "próxima visita prevista" é digitada à mão por quem registra a visita
+// (não é mais calculada automaticamente a partir da periodicidade) -- a
+// única regra é não deixar escolher uma data anterior à da visita que
+// acabou de ser registrada, o que não faria sentido
+function nextVisitNotBeforeVisitDateValidator(group: AbstractControl): ValidationErrors | null {
+  const visitDate = group.get('visitDate')?.value;
+  const nextVisitDue = group.get('nextVisitDue')?.value;
+
+  if (!visitDate || !nextVisitDue) {
+    return null;
+  }
+
+  return new Date(nextVisitDue) < new Date(visitDate) ? { nextVisitBeforeVisit: true } : null;
+}
+
 function toDateTimeLocalString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -38,16 +53,38 @@ export class VisitForm implements OnInit {
     private patientsService: PatientsService,
     private visitsService: VisitsService
   ) {
-    this.form = this.fb.nonNullable.group({
-      visitDate: [this.now, [Validators.required, notFutureDateValidator]],
-      outcome: ['completed' as 'completed' | 'patient_absent' | 'refused', Validators.required],
-      bloodPressure: [''],
-      weightKg: [null as number | null],
-      bloodGlucoseMgDl: [null as number | null],
-      needsReferral: [false],
-      referredTo: [''],
-      notes: [''],
-    });
+    this.form = this.fb.nonNullable.group(
+      {
+        visitDate: [this.now, [Validators.required, notFutureDateValidator]],
+        outcome: ['completed' as 'completed' | 'patient_absent' | 'refused', Validators.required],
+        nextVisitDue: [''],
+        bloodPressure: [''],
+        weightKg: [null as number | null],
+        bloodGlucoseMgDl: [null as number | null],
+        needsReferral: [false],
+        referredTo: [''],
+        notes: [''],
+      },
+      { validators: nextVisitNotBeforeVisitDateValidator }
+    );
+
+    // "próxima visita prevista" só é exigida quando a visita foi de fato
+    // realizada -- paciente ausente/recusou não tem base pra prever a próxima
+    this.form.controls.outcome.valueChanges.subscribe(() => this.updateNextVisitDueValidator());
+    this.updateNextVisitDueValidator();
+  }
+
+  private updateNextVisitDueValidator(): void {
+    const control = this.form.controls.nextVisitDue;
+
+    if (this.form.controls.outcome.value === 'completed') {
+      control.setValidators([Validators.required]);
+    } else {
+      control.setValidators([]);
+      control.setValue('');
+    }
+
+    control.updateValueAndValidity({ emitEvent: false });
   }
 
   ngOnInit(): void {
@@ -56,6 +93,18 @@ export class VisitForm implements OnInit {
     this.patientsService.getById(this.patientId).subscribe((data) => {
       this.patient.set(data);
     });
+  }
+
+  nextVisitDueError(): string | null {
+    const control = this.form.get('nextVisitDue');
+
+    if (!control || !control.touched) {
+      return null;
+    }
+
+    if (control.errors?.['required']) return 'Próxima visita prevista é obrigatória';
+    if (this.form.errors?.['nextVisitBeforeVisit']) return 'Próxima visita não pode ser antes da data da visita';
+    return null;
   }
 
   visitDateError(): string | null {
@@ -81,6 +130,7 @@ export class VisitForm implements OnInit {
     const input: CreateVisitInput = {
       patientId: this.patientId,
       visitDate: value.visitDate,
+      nextVisitDue: value.nextVisitDue,
       outcome: value.outcome,
       bloodPressure: value.bloodPressure,
       weightKg: value.weightKg,

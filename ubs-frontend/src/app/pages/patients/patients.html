@@ -38,7 +38,7 @@
         <th>Enfermeiro(a)</th>
         <th>Prioridade</th>
         <th>Alerta</th>
-        <th>Próxima visita</th>
+        <th>Última visita</th>
         <th>Ativo</th>
         <th>Ações</th>
       </tr>
@@ -56,17 +56,25 @@
           <span class="badge badge-alert--{{ patient.alertLevel }}">{{ alertLabel(patient.alertLevel) }}</span>
           }
         </td>
-        <td data-label="Próxima visita">{{ patient.nextVisitDue ? (patient.nextVisitDue | date:'dd/MM/yyyy') : '-' }}</td>
+        <td data-label="Última visita">{{ patient.lastVisitAt ? (patient.lastVisitAt | date:'dd/MM/yyyy') : '-' }}</td>
         <td data-label="Ativo">{{ patient.active ? 'Sim' : 'Não' }}</td>
         <td data-label="Ações" class="actions">
-          <a [routerLink]="['/patients/edit', patient.id]" class="btn-link action-chip">Editar dados do paciente</a>
-          <div class="action-grid">
-            <a [routerLink]="['/visits/new', patient.id]" class="btn-link action-chip action-chip--visit">Registrar visita</a>
-            <a [routerLink]="['/visits/history', patient.id]" class="btn-link action-chip action-chip--visit">Histórico de visitas</a>
-            <a [routerLink]="['/ivcf/new', patient.id]" class="btn-link action-chip action-chip--primary">Editar IVCF-20</a>
-            <a [routerLink]="['/ivcf/history', patient.id]" class="btn-link action-chip action-chip--primary">Histórico IVCF</a>
+          <button type="button" class="actions-trigger" (click)="toggleActionsMenu(patient.id, $event)">
+            Ações
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openActionsFor() === patient.id) {
+          <div class="actions-menu" [style.top.px]="actionsMenuPosition().top" [style.left.px]="actionsMenuPosition().left" (click)="$event.stopPropagation()">
+            <a [routerLink]="['/patients/edit', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Editar dados do paciente</a>
+            <a [routerLink]="['/visits/new', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Registrar visita</a>
+            <a [routerLink]="['/visits/history', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Histórico de visitas</a>
+            <a [routerLink]="['/ivcf/new', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Editar IVCF-20</a>
+            <a [routerLink]="['/ivcf/history', patient.id]" class="actions-menu__item" (click)="closeActionsMenu()">Histórico IVCF</a>
+            <button type="button" class="actions-menu__item actions-menu__item--danger" (click)="closeActionsMenu(); askDeletePatient(patient)">Excluir paciente</button>
           </div>
-          <button type="button" class="btn-link action-chip action-chip--danger" (click)="askDeletePatient(patient)">Excluir paciente</button>
+          }
         </td>
       </tr>
       } @empty {

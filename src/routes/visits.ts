@@ -6,7 +6,7 @@ export const visitsRouter = Router();
 
 visitsRouter.post("/", async (req, res) => {
     try {
-        const { patientId, visitDate, outcome, bloodPressure, weightKg, bloodGlucoseMgDl, needsReferral, referredTo, notes } = req.body;
+        const { patientId, visitDate, outcome, bloodPressure, weightKg, bloodGlucoseMgDl, needsReferral, referredTo, notes, nextVisitDue } = req.body;
 
         if (!patientId || !visitDate) {
             return res.status(400).json({ error: "patientId and visitDate are required" });
@@ -16,6 +16,18 @@ visitsRouter.post("/", async (req, res) => {
 
         if (!(VALID_VISIT_OUTCOMES as readonly string[]).includes(resolvedOutcome)) {
             return res.status(400).json({ error: `outcome must be one of: ${VALID_VISIT_OUTCOMES.join(", ")}` });
+        }
+
+        // "próxima visita prevista" é digitada manualmente por quem registra a
+        // visita -- só faz sentido (e só é obrigatória) quando a visita foi
+        // realmente realizada; ausência/recusa não geram uma nova previsão
+        if (resolvedOutcome === "completed") {
+            if (!nextVisitDue) {
+                return res.status(400).json({ error: "nextVisitDue is required when outcome is 'completed'" });
+            }
+            if (new Date(nextVisitDue) < new Date(visitDate)) {
+                return res.status(400).json({ error: "nextVisitDue cannot be before visitDate" });
+            }
         }
 
         const professionalId = req.user!.professionalId;
@@ -34,6 +46,7 @@ visitsRouter.post("/", async (req, res) => {
         const visit = await createVisit({
             patientId,
             visitDate,
+            nextVisitDue: resolvedOutcome === "completed" ? nextVisitDue : "",
             outcome: resolvedOutcome,
             bloodPressure: bloodPressure || "",
             weightKg: weightKg ?? null,

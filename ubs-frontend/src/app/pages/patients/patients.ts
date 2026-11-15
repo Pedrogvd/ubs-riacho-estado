@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, signal, computed } from '@angular/core';
 import { Patients as PatientsService, Patient } from '../../services/patients';
 import { HealthProfessionals as HealthProfessionalsService, HealthProfessional } from '../../services/health-professionals';
 import { Auth as AuthService } from '../../services/auth';
@@ -18,6 +18,12 @@ export class Patients implements OnInit {
   patients = signal<Patient[]>([]);
   healthProfessionals = signal<HealthProfessional[]>([]);
   currentPage = signal(1);
+
+  // menu de ações por linha: em vez de mostrar os 6 botões sempre visíveis
+  // (o que obrigava a tabela a rolar pro lado), um botão só que abre um menu
+  // flutuante -- mesmo padrão já usado em Configurações > Pacientes
+  openActionsFor = signal<string | null>(null);
+  actionsMenuPosition = signal<{ top: number; left: number }>({ top: 0, left: 0 });
 
   searchTerm = signal('');
   priorityFilter = signal<'all' | Patient['priority']>('all');
@@ -69,6 +75,37 @@ export class Patients implements OnInit {
   professionalName(id: string): string {
     if (!id) return '';
     return this.healthProfessionals().find((p) => p.id === id)?.name ?? '';
+  }
+
+  toggleActionsMenu(patientId: string, event: MouseEvent): void {
+    // impede que esse clique chegue no listener de document:click logo
+    // abaixo e feche o menu no mesmo instante em que ele abriu
+    event.stopPropagation();
+
+    if (this.openActionsFor() === patientId) {
+      this.openActionsFor.set(null);
+      return;
+    }
+
+    const trigger = event.currentTarget as HTMLElement;
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 230;
+    this.actionsMenuPosition.set({
+      top: rect.bottom + 4,
+      left: Math.min(rect.left, window.innerWidth - menuWidth - 8),
+    });
+    this.openActionsFor.set(patientId);
+  }
+
+  closeActionsMenu(): void {
+    this.openActionsFor.set(null);
+  }
+
+  @HostListener('document:click')
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onDocumentInteraction(): void {
+    this.closeActionsMenu();
   }
 
   private loadPatients(): void {
