@@ -33,7 +33,7 @@ export async function createHealthProfessional(input: CreateHealthProfessionalIn
         // todo cadastro nasce como profissional comum e ativo; virar admin ou
         // ser desativado é feito depois, via tela de Usuários
         role: "professional",
-        specialty: "",
+        specialty: input.specialty ?? "",
         active: true,
         createdAt: new Date().toISOString(),
     }

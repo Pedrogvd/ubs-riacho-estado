@@ -46,6 +46,10 @@ export class ProfessionalForm implements OnInit {
       phoneNumber: ['', Validators.pattern(/^\d{10,11}$/)],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
+      // só usado na CRIAÇÃO -- na edição, a função clínica é trocada à parte
+      // (ver onSpecialtyChange), com salvamento imediato, então esse campo
+      // nunca é preenchido nem enviado no "Salvar alterações" (ver onSubmit)
+      specialty: ['' as '' | 'chw' | 'doctor' | 'nurse'],
     });
   }
 
@@ -203,7 +207,11 @@ export class ProfessionalForm implements OnInit {
       return;
     }
 
-    const { password, ...rest } = this.form.getRawValue();
+    // "specialty" sai separado de "rest": na edição, quem muda a função
+    // clínica é onSpecialtyChange (salva na hora), então o PATCH daqui não
+    // pode mandar junto -- senão reseta a função pra "Não definida" toda
+    // vez que a pessoa salvar o resto do cadastro
+    const { password, specialty, ...rest } = this.form.getRawValue();
 
     if (this.isEditMode() && this.professionalId) {
       const input: UpdateHealthProfessionalInput = rest;
@@ -214,7 +222,7 @@ export class ProfessionalForm implements OnInit {
       return;
     }
 
-    const input: CreateHealthProfessionalInput = { ...rest, password };
+    const input: CreateHealthProfessionalInput = { ...rest, password, specialty };
 
     this.healthProfessionalsService.create(input).subscribe(() => {
       this.router.navigate(['/settings']);

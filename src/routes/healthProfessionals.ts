@@ -8,7 +8,7 @@ export const healthProfessionalRouter = Router();
 
 healthProfessionalRouter.post("/", async (req, res) => {
     try {
-        const { name, cpf, address, phoneNumber, email, password } = req.body;
+        const { name, cpf, address, phoneNumber, email, password, specialty } = req.body;
 
         if (!name || !cpf || !email || !password) {
             return res.status(400).json({ error: "name, cpf, email and password are required" });
@@ -27,6 +27,12 @@ healthProfessionalRouter.post("/", async (req, res) => {
             return res.status(400).json({ error: "phoneNumber must contain 10 or 11 digits" });
         }
 
+        // opcional (pode nascer "Não definida" e ser preenchida depois, em
+        // Configurações) -- mas se vier, precisa ser um dos valores válidos
+        if (specialty !== undefined && !["", "chw", "doctor", "nurse"].includes(specialty)) {
+            return res.status(400).json({ error: "specialty must be '', 'chw', 'doctor' or 'nurse'" });
+        }
+
         const healthProfessional = await createHealthProfessional({
             name,
             cpf: normalizedCpf,
@@ -34,6 +40,7 @@ healthProfessionalRouter.post("/", async (req, res) => {
             phoneNumber: normalizedPhoneNumber,
             email,
             password,
+            specialty,
         });
 
         const safeHealthProfessional = {

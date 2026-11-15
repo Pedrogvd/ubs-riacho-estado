@@ -51,6 +51,16 @@
       <span class="field-error">{{ error }}</span>
       }
     </label>
+
+    <label>
+      <span class="field-label">Função clínica</span>
+      <select formControlName="specialty">
+        <option value="">Não definida</option>
+        <option value="chw">ACS</option>
+        <option value="doctor">Médico(a)</option>
+        <option value="nurse">Enfermeiro(a)</option>
+      </select>
+    </label>
     }
 
     @if (isEditMode() && professional(); as prof) {

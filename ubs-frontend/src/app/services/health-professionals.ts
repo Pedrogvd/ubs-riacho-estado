@@ -23,6 +23,7 @@ export interface CreateHealthProfessionalInput {
   phoneNumber: string;
   email: string;
   password: string;
+  specialty?: '' | 'chw' | 'doctor' | 'nurse';
 }
 
 export interface UpdateHealthProfessionalInput {

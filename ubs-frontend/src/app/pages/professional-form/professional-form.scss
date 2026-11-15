@@ -31,15 +31,19 @@ label {
   color: #334155;
 }
 
-input {
+input,
+select {
   padding: 0.6rem 0.75rem;
   border: 0.0625rem solid #cbd5e1;
   border-radius: 0.5rem;
   font-size: 0.95rem;
   font-family: inherit;
+  background: #fff;
+  color: inherit;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: none;
   border-color: #0f9d8f;
 }
