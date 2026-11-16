@@ -101,8 +101,9 @@
       <div class="modal-box" (click)="$event.stopPropagation()">
         <h2>Excluir paciente</h2>
         <p>
-          Excluir o paciente <strong>"{{ patient.name }}"</strong>? Isso também apaga o histórico de visitas e de
-          avaliações IVCF-20 dele. Essa ação não pode ser desfeita.
+          Excluir o paciente <strong>"{{ patient.name }}"</strong>? Isso remove o paciente também da lista dos
+          outros profissionais do time dele (ACS, médico e enfermeiro), e apaga junto o histórico de visitas e de
+          avaliações IVCF-20. Essa ação não pode ser desfeita.
         </p>
 
         @if (patientDeleteError()) {
