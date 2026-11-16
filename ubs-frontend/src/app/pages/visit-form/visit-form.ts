@@ -14,9 +14,22 @@ function notFutureDateValidator(control: AbstractControl): ValidationErrors | nu
 }
 
 // a "próxima visita prevista" é digitada à mão por quem registra a visita
-// (não é mais calculada automaticamente a partir da periodicidade) -- a
-// única regra é não deixar escolher uma data anterior à da visita que
-// acabou de ser registrada, o que não faria sentido
+// (não é mais calculada automaticamente a partir da periodicidade) -- mas
+// precisa ser hoje ou no futuro (não faz sentido "prever" uma próxima
+// visita no passado), e também não pode ser antes da data da visita que
+// acabou de ser registrada
+function nextVisitNotPastValidator(control: AbstractControl): ValidationErrors | null {
+  if (!control.value) {
+    return null;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const inputDate = new Date(control.value);
+  return inputDate < today ? { pastDate: true } : null;
+}
+
 function nextVisitNotBeforeVisitDateValidator(group: AbstractControl): ValidationErrors | null {
   const visitDate = group.get('visitDate')?.value;
   const nextVisitDue = group.get('nextVisitDue')?.value;
@@ -33,6 +46,11 @@ function toDateTimeLocalString(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function toDateString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 @Component({
   selector: 'app-visit-form',
   imports: [ReactiveFormsModule],
@@ -43,6 +61,7 @@ export class VisitForm implements OnInit {
   patient = signal<Patient | null>(null);
   patientId!: string;
   now = toDateTimeLocalString(new Date()); // trava o input no presente e já vem pré-preenchido
+  today = toDateString(new Date()); // trava a "próxima visita" pra não deixar escolher data passada
 
   form;
 
@@ -78,7 +97,7 @@ export class VisitForm implements OnInit {
     const control = this.form.controls.nextVisitDue;
 
     if (this.form.controls.outcome.value === 'completed') {
-      control.setValidators([Validators.required]);
+      control.setValidators([Validators.required, nextVisitNotPastValidator]);
     } else {
       control.setValidators([]);
       control.setValue('');
@@ -103,6 +122,7 @@ export class VisitForm implements OnInit {
     }
 
     if (control.errors?.['required']) return 'Próxima visita prevista é obrigatória';
+    if (control.errors?.['pastDate']) return 'Próxima visita não pode ser no passado -- escolha hoje ou uma data futura';
     if (this.form.errors?.['nextVisitBeforeVisit']) return 'Próxima visita não pode ser antes da data da visita';
     return null;
   }

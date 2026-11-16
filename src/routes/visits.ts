@@ -28,6 +28,11 @@ visitsRouter.post("/", async (req, res) => {
             if (new Date(nextVisitDue) < new Date(visitDate)) {
                 return res.status(400).json({ error: "nextVisitDue cannot be before visitDate" });
             }
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            if (new Date(nextVisitDue) < startOfToday) {
+                return res.status(400).json({ error: "nextVisitDue cannot be in the past" });
+            }
         }
 
         const professionalId = req.user!.professionalId;

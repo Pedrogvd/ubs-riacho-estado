@@ -26,7 +26,7 @@
     @if (form.get('outcome')?.value === 'completed') {
       <label>
         <span class="field-label">Próxima visita prevista <span class="required">*</span></span>
-        <input type="date" formControlName="nextVisitDue" />
+        <input type="date" formControlName="nextVisitDue" [attr.min]="today" />
         @if (nextVisitDueError(); as error) {
           <span class="field-error">{{ error }}</span>
         }
