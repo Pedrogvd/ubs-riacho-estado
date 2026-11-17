@@ -309,6 +309,12 @@ button:disabled {
   gap: 0.5rem;
 }
 
+.additional-phones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .identifier-fieldset legend {
   font-size: 0.9rem;
   font-weight: 600;
@@ -320,4 +326,37 @@ button:disabled {
   margin: 0;
   color: #64748b;
   font-size: 0.8rem;
+}
+
+// botões "+ Adicionar outro telefone" / "Remover esse telefone", dentro do
+// fieldset de telefone -- o fieldset é flex column (igual .identifier-fieldset),
+// que por padrão estica os filhos pra largura cheia, então aqui usamos
+// align-self pra eles ficarem do tamanho do próprio texto, como um botão
+// secundário normal (mesmo visual do botão "Adicionar" de condição personalizada)
+.phone-fieldset-button {
+  align-self: flex-start;
+  margin-top: 0;
+  padding: 0.4rem 0.8rem;
+  border: 0.0625rem solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: white;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.phone-fieldset-button:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.phone-fieldset-button--danger {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.phone-fieldset-button--danger:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
 }

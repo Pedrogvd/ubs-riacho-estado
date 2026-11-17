@@ -47,6 +47,7 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
         cpf: input.cpf,
         address: input.address,
         phoneNumber: input.phoneNumber,
+        additionalPhoneNumbers: input.additionalPhoneNumbers,
         dateOfBirth: input.dateOfBirth,
         priority: input.priority,
         conditions: input.conditions,
@@ -191,16 +192,19 @@ export async function updatePatientAfterVisit(patientId: string, visitDate: stri
     const isMostRecentVisit = !patient.lastVisitAt || new Date(visitDate) >= new Date(patient.lastVisitAt);
     if (!isMostRecentVisit) return;
 
+    // nextVisitDue agora é opcional na hora de registrar a visita -- se quem
+    // registrou não informou uma próxima data, não apaga a que o paciente já
+    // tinha (só atualiza lastVisitAt); só sobrescreve nextVisitDue quando uma
+    // nova data foi realmente informada nessa visita
+    const doc: Record<string, unknown> = { lastVisitAt: visitDate };
+    if (nextVisitDue) {
+        doc.nextVisitDue = nextVisitDue;
+    }
+
     await esClient.update({
         index: INDICES.patients,
         id: patientId,
-        body: {
-            doc: {
-                // only these fields get merged into the existing patient; everything else stays untouched
-                lastVisitAt: visitDate,
-                nextVisitDue: nextVisitDue
-            }
-        },
+        body: { doc },
         refresh: "wait_for"
     })
 }

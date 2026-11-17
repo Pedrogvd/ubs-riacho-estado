@@ -74,14 +74,41 @@
       }
     </label>
 
-    <label>
-      <span class="field-label">Telefone <span class="required">*</span></span>
-      <input type="tel" inputmode="numeric" maxlength="16" formControlName="phoneNumber"
-        (input)="formatPhone($event)" />
-      @if (getError('phoneNumber'); as error) {
-      <span class="field-error">{{ error }}</span>
+    <fieldset class="identifier-fieldset">
+      <legend>Telefone do paciente</legend>
+      <p class="identifier-hint">O primeiro é obrigatório; pode adicionar outros, opcionalmente.</p>
+
+      <label>
+        <span class="field-label">Telefone <span class="required">*</span></span>
+        <input type="tel" inputmode="numeric" maxlength="16" formControlName="phoneNumber"
+          (input)="formatPhone($event)" />
+        @if (getError('phoneNumber'); as error) {
+        <span class="field-error">{{ error }}</span>
+        }
+      </label>
+
+      <!-- formArrayName só envolve essa parte (os telefones extras) -- o
+           telefone principal acima pertence ao form raiz, não ao array -->
+      <div class="additional-phones" formArrayName="additionalPhoneNumbers">
+        @for (phoneControl of additionalPhoneNumbersArray.controls; track $index; let i = $index) {
+        <label>
+          <span class="field-label">Outro telefone</span>
+          <input type="tel" inputmode="numeric" maxlength="16" [formControlName]="i"
+            (input)="formatAdditionalPhone(i, $event)" />
+          @if (additionalPhoneError(i); as error) {
+          <span class="field-error">{{ error }}</span>
+          }
+        </label>
+        <button type="button" class="phone-fieldset-button phone-fieldset-button--danger" (click)="removeAdditionalPhoneField(i)">Remover esse telefone</button>
+        }
+      </div>
+
+      <button type="button" class="phone-fieldset-button" (click)="addAdditionalPhoneField()">+ Adicionar outro telefone</button>
+
+      @if (form.hasError('duplicatePhones')) {
+      <span class="field-error">Há um telefone repetido -- cada telefone informado precisa ser diferente dos outros.</span>
       }
-    </label>
+    </fieldset>
 
     <label>
       <span class="field-label">Data de nascimento <span class="required">*</span></span>

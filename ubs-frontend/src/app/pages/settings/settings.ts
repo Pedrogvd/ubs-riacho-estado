@@ -117,11 +117,27 @@ export class Settings implements OnInit {
     const trigger = event.currentTarget as HTMLElement;
     const rect = trigger.getBoundingClientRect();
     const menuWidth = 230;
-    this.actionsMenuPosition.set({
-      top: rect.bottom + 4,
-      left: Math.min(rect.left, window.innerWidth - menuWidth - 8),
-    });
+    const left = Math.min(rect.left, window.innerWidth - menuWidth - 8);
+
+    // abre embaixo do botão primeiro (caso mais comum) -- a altura real do
+    // menu só existe depois que ele for renderizado, então corrige pra
+    // cima logo em seguida (setTimeout roda só depois do DOM atualizar)
+    // se não couber embaixo. Sem isso, ou chuta uma altura (impreciso, fica
+    // com espaço sobrando) ou corta o menu perto do fim da tela -- e como o
+    // scroll fecha o menu (ver onDocumentInteraction), não dá nem pra rolar
+    // a página até o resto dele
+    this.actionsMenuPosition.set({ top: rect.bottom + 4, left });
     this.openActionsFor.set(patientId);
+
+    setTimeout(() => {
+      const menu = document.querySelector('.actions-menu') as HTMLElement | null;
+      if (!menu) return;
+
+      const menuHeight = menu.getBoundingClientRect().height;
+      if (rect.bottom + menuHeight + 4 > window.innerHeight) {
+        this.actionsMenuPosition.set({ top: Math.max(8, rect.top - menuHeight - 4), left });
+      }
+    });
   }
 
   closeActionsMenu(): void {

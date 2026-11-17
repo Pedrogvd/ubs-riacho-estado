@@ -19,9 +19,15 @@ async function findInvalidConditions(conditions: string[]): Promise<string[]> {
     );
 }
 
+// confere se todos os telefones extras (todos opcionais, mas se vierem
+// precisam ter 10 ou 11 digitos, mesma regra do telefone principal)
+function findInvalidPhoneNumbers(phoneNumbers: string[]): string[] {
+    return phoneNumbers.filter((phone) => !/^\d{10,11}$/.test(phone));
+}
+
 patientsRouter.post("/", async (req, res) => {
     try {
-        const { name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, communityHealthWorkerId, doctorId, nurseId, forceCreate } = req.body;
+        const { name, cpf, address, phoneNumber, additionalPhoneNumbers, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, communityHealthWorkerId, doctorId, nurseId, forceCreate } = req.body;
 
         if (!name) {
             return res.status(400).json({ error: "name is required" });
@@ -37,6 +43,13 @@ patientsRouter.post("/", async (req, res) => {
 
         if (phoneNumber && !/^\d{10,11}$/.test(phoneNumber)) {
             return res.status(400).json({ error: "phoneNumber must contain 10 or 11 digits" });
+        }
+
+        if (additionalPhoneNumbers) {
+            const invalidPhones = findInvalidPhoneNumbers(additionalPhoneNumbers);
+            if (invalidPhones.length > 0) {
+                return res.status(400).json({ error: `additionalPhoneNumbers must contain 10 or 11 digits each: ${invalidPhones.join(", ")}` });
+            }
         }
 
         if (cns && !/^\d{15}$/.test(cns)) {
@@ -123,6 +136,7 @@ patientsRouter.post("/", async (req, res) => {
             cpf: cpf || "",
             address: address || "",
             phoneNumber: phoneNumber || "",
+            additionalPhoneNumbers: additionalPhoneNumbers || [],
             dateOfBirth: dateOfBirth || "",
             priority: priority || "",
             conditions: conditions || [],
@@ -191,7 +205,7 @@ patientsRouter.patch("/:id", async (req, res) => {
             return res.status(403).json({ error: "you don't have access to this patient" });
         }
 
-        const { name, cpf, address, phoneNumber, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, communityHealthWorkerId, doctorId, nurseId, active } = req.body;
+        const { name, cpf, address, phoneNumber, additionalPhoneNumbers, dateOfBirth, priority, conditions, visitPeriodicityDays, cns, microarea, communityHealthWorkerId, doctorId, nurseId, active } = req.body;
 
         if (cpf !== undefined && cpf !== "" && !/^\d{11}$/.test(cpf)) {
             return res.status(400).json({ error: "cpf must contain exactly 11 digits" });
@@ -199,6 +213,13 @@ patientsRouter.patch("/:id", async (req, res) => {
 
         if (phoneNumber !== undefined && phoneNumber !== "" && !/^\d{10,11}$/.test(phoneNumber)) {
             return res.status(400).json({ error: "phoneNumber must contain 10 or 11 digits" });
+        }
+
+        if (additionalPhoneNumbers !== undefined) {
+            const invalidPhones = findInvalidPhoneNumbers(additionalPhoneNumbers);
+            if (invalidPhones.length > 0) {
+                return res.status(400).json({ error: `additionalPhoneNumbers must contain 10 or 11 digits each: ${invalidPhones.join(", ")}` });
+            }
         }
 
         if (cns !== undefined && cns !== "" && !/^\d{15}$/.test(cns)) {
@@ -234,7 +255,7 @@ patientsRouter.patch("/:id", async (req, res) => {
             : (visitPeriodicityDays || 30);
 
         const updates: Record<string, unknown> = {
-            name, cpf, address, phoneNumber, dateOfBirth,
+            name, cpf, address, phoneNumber, additionalPhoneNumbers, dateOfBirth,
             priority,
             conditions, visitPeriodicityDays: resolvedVisitPeriodicityDays, cns, microarea, active,
         };

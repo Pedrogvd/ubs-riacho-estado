@@ -19,12 +19,10 @@ visitsRouter.post("/", async (req, res) => {
         }
 
         // "próxima visita prevista" é digitada manualmente por quem registra a
-        // visita -- só faz sentido (e só é obrigatória) quando a visita foi
-        // realmente realizada; ausência/recusa não geram uma nova previsão
-        if (resolvedOutcome === "completed") {
-            if (!nextVisitDue) {
-                return res.status(400).json({ error: "nextVisitDue is required when outcome is 'completed'" });
-            }
+        // visita e é opcional -- só faz sentido quando a visita foi
+        // realmente realizada (ausência/recusa não geram uma nova previsão),
+        // e só valida o conteúdo quando alguma data foi de fato informada
+        if (resolvedOutcome === "completed" && nextVisitDue) {
             if (new Date(nextVisitDue) < new Date(visitDate)) {
                 return res.status(400).json({ error: "nextVisitDue cannot be before visitDate" });
             }
@@ -51,7 +49,7 @@ visitsRouter.post("/", async (req, res) => {
         const visit = await createVisit({
             patientId,
             visitDate,
-            nextVisitDue: resolvedOutcome === "completed" ? nextVisitDue : "",
+            nextVisitDue: resolvedOutcome === "completed" ? (nextVisitDue || "") : "",
             outcome: resolvedOutcome,
             bloodPressure: bloodPressure || "",
             weightKg: weightKg ?? null,

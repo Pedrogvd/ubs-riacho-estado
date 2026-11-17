@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormArray, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Patients as PatientsService, CreatePatientInput, UpdatePatientInput } from '../../services/patients';
 import { HealthProfessionals as HealthProfessionalsService, HealthProfessional } from '../../services/health-professionals';
@@ -65,6 +65,38 @@ function atLeastOneIdentifierValidator(group: AbstractControl): ValidationErrors
   const informCpf = group.get('informCpf')?.value;
   const informCns = group.get('informCns')?.value;
   return informCpf || informCns ? null : { missingIdentifier: true };
+}
+
+// impede que o mesmo telefone apareça mais de uma vez -- seja repetido
+// entre os telefones extras, seja igual ao telefone principal
+function duplicatePhoneValidator(group: AbstractControl): ValidationErrors | null {
+  const phoneNumberControl = group.get('phoneNumber');
+  const additionalArray = group.get('additionalPhoneNumbers') as FormArray<FormControl<string>> | null;
+  if (!phoneNumberControl || !additionalArray) return null;
+
+  const values = [phoneNumberControl.value, ...additionalArray.controls.map((control) => control.value)]
+    .filter((value): value is string => !!value);
+
+  const hasDuplicate = new Set(values).size !== values.length;
+  return hasDuplicate ? { duplicatePhones: true } : null;
+}
+
+// máscara visual compartilhada entre o telefone principal e os telefones
+// extras (cada um na sua própria caixinha, dentro do mesmo fieldset)
+function maskPhoneDigits(digitsOnly: string): string {
+  if (digitsOnly.length > 10) {
+    return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 7)}-${digitsOnly.slice(7)}`;
+  }
+  if (digitsOnly.length > 6) {
+    return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6)}`;
+  }
+  if (digitsOnly.length > 2) {
+    return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2)}`;
+  }
+  if (digitsOnly.length > 0) {
+    return `(${digitsOnly}`;
+  }
+  return digitsOnly;
 }
 
 // Mensagem de erro por campo, indexada pela chave do erro (required, pattern, futureDate...)
@@ -161,6 +193,7 @@ export class PatientForm implements OnInit {
       cns: ['', Validators.pattern(/^\d{15}$/)],
       address: ['', Validators.required],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+      additionalPhoneNumbers: this.fb.array<FormControl<string>>([]),
       dateOfBirth: ['', [Validators.required, notFutureDateValidator]],
       priority: ['' as 'high' | 'medium' | 'low' | ''],
       visitPeriodicityDays: [30],
@@ -169,7 +202,7 @@ export class PatientForm implements OnInit {
       doctorId: [''],
       nurseId: [''],
       active: [true],
-    }, { validators: atLeastOneIdentifierValidator });
+    }, { validators: [atLeastOneIdentifierValidator, duplicatePhoneValidator] });
 
     this.updateIdentifierValidators();
   }
@@ -228,8 +261,33 @@ export class PatientForm implements OnInit {
         nurseId: patient.nurseId,
         active: patient.active,
       });
+
+      this.additionalPhoneNumbersArray.clear();
+      (patient.additionalPhoneNumbers || []).forEach((phone) => {
+        this.additionalPhoneNumbersArray.push(this.fb.nonNullable.control(phone, Validators.pattern(/^\d{10,11}$/)));
+      });
+
       this.updateIdentifierValidators();
     });
+  }
+
+  get additionalPhoneNumbersArray(): FormArray<FormControl<string>> {
+    return this.form.get('additionalPhoneNumbers') as FormArray<FormControl<string>>;
+  }
+
+  addAdditionalPhoneField(): void {
+    this.additionalPhoneNumbersArray.push(this.fb.nonNullable.control('', Validators.pattern(/^\d{10,11}$/)));
+  }
+
+  removeAdditionalPhoneField(index: number): void {
+    this.additionalPhoneNumbersArray.removeAt(index);
+  }
+
+  additionalPhoneError(index: number): string | null {
+    const control = this.additionalPhoneNumbersArray.at(index);
+    if (!control || !control.touched || !control.errors) return null;
+    if (control.errors['pattern']) return 'Telefone deve ter 10 ou 11 dígitos (com DDD)';
+    return 'Campo inválido';
   }
 
   isAdmin(): boolean {
@@ -276,21 +334,17 @@ export class PatientForm implements OnInit {
     const digitsOnly = input.value.replace(/\D/g, '').slice(0, 11);
 
     this.form.get('phoneNumber')?.setValue(digitsOnly, { emitEvent: false });
+    input.value = maskPhoneDigits(digitsOnly);
+  }
 
-    let formatted = digitsOnly;
-    if (digitsOnly.length > 10) {
-      // celular: (31) 98888-7777
-      formatted = `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 7)}-${digitsOnly.slice(7)}`;
-    } else if (digitsOnly.length > 6) {
-      // fixo: (31) 8888-7777
-      formatted = `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6)}`;
-    } else if (digitsOnly.length > 2) {
-      formatted = `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2)}`;
-    } else if (digitsOnly.length > 0) {
-      formatted = `(${digitsOnly}`;
-    }
+  // mesma máscara, só que pra cada caixinha de telefone extra dentro do
+  // fieldset (ver additionalPhoneNumbersArray)
+  formatAdditionalPhone(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 11);
 
-    input.value = formatted;
+    this.additionalPhoneNumbersArray.at(index)?.setValue(digitsOnly, { emitEvent: false });
+    input.value = maskPhoneDigits(digitsOnly);
   }
 
   isCpfInformed(): boolean {
@@ -490,6 +544,11 @@ export class PatientForm implements OnInit {
     // informCpf/informCns só controlam a UI (quais campos aparecem/são
     // obrigatórios); a API não precisa deles, só dos valores de cpf/cns em si
     const { informCpf, informCns, ...value } = this.form.getRawValue();
+
+    // descarta caixinhas de telefone extra deixadas em branco (ex.: clicou
+    // em "Adicionar" e não chegou a preencher) -- o backend exige 10 ou 11
+    // dígitos em cada telefone que for enviado, não aceita string vazia
+    const additionalPhoneNumbers = value.additionalPhoneNumbers.filter((phone) => phone.length > 0);
     const destination = this.isAdmin() ? '/settings' : '/patients';
 
     // "conditions" vai pro back-end como uma lista só, misturando os valores
@@ -503,6 +562,7 @@ export class PatientForm implements OnInit {
       const input: UpdatePatientInput = {
         ...value,
         conditions: combinedConditions,
+        additionalPhoneNumbers,
       };
 
       this.patientsService.update(this.patientId, input).subscribe({
@@ -518,6 +578,7 @@ export class PatientForm implements OnInit {
     const input: CreatePatientInput = {
       ...value,
       conditions: combinedConditions,
+      additionalPhoneNumbers,
     };
 
     this.patientsService.create(input).subscribe({

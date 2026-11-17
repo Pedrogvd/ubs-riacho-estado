@@ -3,6 +3,7 @@ export interface CreatePatientInput {
     cpf: string;
     address: string;
     phoneNumber: string;
+    additionalPhoneNumbers: string[];
     dateOfBirth: string;
     priority: "high" | "medium" | "low" | "";
     conditions: string[];

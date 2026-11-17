@@ -4,6 +4,8 @@ export interface Patient {
     cpf: string;
     address: string;
     phoneNumber: string;
+    // telefones extras, alem do principal (phoneNumber) -- todos opcionais
+    additionalPhoneNumbers: string[];
     dateOfBirth: string;
     priority: "high" | "medium" | "low" | "";
     conditions: string[];

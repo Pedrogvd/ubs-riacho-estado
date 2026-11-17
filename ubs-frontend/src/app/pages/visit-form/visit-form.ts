@@ -96,8 +96,10 @@ export class VisitForm implements OnInit {
   private updateNextVisitDueValidator(): void {
     const control = this.form.controls.nextVisitDue;
 
+    // próxima visita prevista é opcional -- só valida que, SE preenchida,
+    // não pode ser no passado; não exige mais que seja preenchida
     if (this.form.controls.outcome.value === 'completed') {
-      control.setValidators([Validators.required, nextVisitNotPastValidator]);
+      control.setValidators([nextVisitNotPastValidator]);
     } else {
       control.setValidators([]);
       control.setValue('');
@@ -121,7 +123,6 @@ export class VisitForm implements OnInit {
       return null;
     }
 
-    if (control.errors?.['required']) return 'Próxima visita prevista é obrigatória';
     if (control.errors?.['pastDate']) return 'Próxima visita não pode ser no passado -- escolha hoje ou uma data futura';
     if (this.form.errors?.['nextVisitBeforeVisit']) return 'Próxima visita não pode ser antes da data da visita';
     return null;
