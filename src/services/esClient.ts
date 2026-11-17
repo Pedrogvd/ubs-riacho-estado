@@ -68,6 +68,12 @@ export async function ensureIndices(): Promise<void> { // A Promise represents a
             patientId: { type: "keyword" },
             professionalId: { type: "keyword" },
             visitDate: { type: "date" },
+            // faltava aqui -- sem isso o elasticsearch mapeia esse campo
+            // dinamicamente a partir do primeiro valor que ele vir (provavelmente
+            // uma data real), e dai quebra se mais tarde mandarmos null/"" pra
+            // ele (nextVisitDue e opcional). Só afeta índice criado do zero;
+            // o que já existe em produção não muda com isso.
+            nextVisitDue: { type: "date" },
             notes: { type: "text" },
         },
     });

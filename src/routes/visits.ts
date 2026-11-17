@@ -49,7 +49,10 @@ visitsRouter.post("/", async (req, res) => {
         const visit = await createVisit({
             patientId,
             visitDate,
-            nextVisitDue: resolvedOutcome === "completed" ? (nextVisitDue || "") : "",
+            // null (nao string vazia) quando nao informado -- o campo e
+            // mapeado como "date" no elasticsearch, e mandar "" pra um
+            // campo date quebra a indexacao (mapper_parsing_exception)
+            nextVisitDue: resolvedOutcome === "completed" ? (nextVisitDue || null) : null,
             outcome: resolvedOutcome,
             bloodPressure: bloodPressure || "",
             weightKg: weightKg ?? null,

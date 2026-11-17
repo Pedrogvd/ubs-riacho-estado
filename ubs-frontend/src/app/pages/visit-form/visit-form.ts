@@ -151,7 +151,10 @@ export class VisitForm implements OnInit {
     const input: CreateVisitInput = {
       patientId: this.patientId,
       visitDate: value.visitDate,
-      nextVisitDue: value.nextVisitDue,
+      // '' vira null -- o backend indexa isso num campo "date" do
+      // elasticsearch, que quebra se receber string vazia (só aceita
+      // valor real ou null)
+      nextVisitDue: value.nextVisitDue || null,
       outcome: value.outcome,
       bloodPressure: value.bloodPressure,
       weightKg: value.weightKg,

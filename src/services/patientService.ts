@@ -185,7 +185,7 @@ export async function updatePatient(
 // (por data da visita, não por ordem de registro) -- sem isso, registrar
 // uma visita atrasada (de uma data mais antiga) depois de uma visita mais
 // nova já registrada faria "última visita" voltar pro passado por engano
-export async function updatePatientAfterVisit(patientId: string, visitDate: string, nextVisitDue: string): Promise<void> {
+export async function updatePatientAfterVisit(patientId: string, visitDate: string, nextVisitDue: string | null): Promise<void> {
     const patient = await getPatient(patientId)
     if (!patient) throw new Error(`Patient ${patientId} not found`);
 
