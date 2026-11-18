@@ -144,6 +144,11 @@ tbody tr:hover {
   text-transform: capitalize;
 }
 
+.badge--urgent {
+  background: #b91c1c;
+  color: #fff;
+}
+
 .badge--high {
   background: #fee2e2;
   color: #b91c1c;

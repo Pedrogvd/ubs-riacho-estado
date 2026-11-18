@@ -7,7 +7,7 @@ export interface Patient {
     // telefones extras, alem do principal (phoneNumber) -- todos opcionais
     additionalPhoneNumbers: string[];
     dateOfBirth: string;
-    priority: "high" | "medium" | "low" | "";
+    priority: "urgent" | "high" | "medium" | "low" | "";
     conditions: string[];
     visitPeriodicityDays: number;
     active: boolean;

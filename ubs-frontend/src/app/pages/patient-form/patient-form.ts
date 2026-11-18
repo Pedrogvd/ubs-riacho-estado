@@ -195,7 +195,7 @@ export class PatientForm implements OnInit {
       phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
       additionalPhoneNumbers: this.fb.array<FormControl<string>>([]),
       dateOfBirth: ['', [Validators.required, notFutureDateValidator]],
-      priority: ['' as 'high' | 'medium' | 'low' | ''],
+      priority: ['' as 'urgent' | 'high' | 'medium' | 'low' | ''],
       visitPeriodicityDays: [30],
       microarea: [''],
       communityHealthWorkerId: [''],

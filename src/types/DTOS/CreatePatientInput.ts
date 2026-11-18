@@ -5,7 +5,7 @@ export interface CreatePatientInput {
     phoneNumber: string;
     additionalPhoneNumbers: string[];
     dateOfBirth: string;
-    priority: "high" | "medium" | "low" | "";
+    priority: "urgent" | "high" | "medium" | "low" | "";
     conditions: string[];
     visitPeriodicityDays: number;
     cns: string;

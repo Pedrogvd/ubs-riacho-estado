@@ -177,6 +177,7 @@ export class Settings implements OnInit {
 
   priorityLabel(priority: Patient['priority']): string {
     switch (priority) {
+      case 'urgent': return 'Muito Alta';
       case 'high': return 'Alta';
       case 'medium': return 'Média';
       case 'low': return 'Baixa';
